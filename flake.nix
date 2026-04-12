@@ -22,7 +22,7 @@
       # hosts/main/hardware-configuration.nix を追加してからコメントを外す
       # main = mkSystem { hostname = "main"; };
       # hosts/minipc/hardware-configuration.nix を追加してからコメントを外す
-      # minipc = mkSystem { hostname = "minipc"; };
+      minipc = mkSystem { hostname = "minipc"; };
     };
     homeConfigurations = {
       myHome = inputs.home-manager.lib.homeManagerConfiguration {
