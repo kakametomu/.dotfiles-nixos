@@ -1,6 +1,12 @@
-{ pkgs, ... }:
+{ pkgs, ... }: {
+  imports = [
+    ./git.nix
+    ./nvim.nix
+    ./zsh.nix
+    ./fish.nix
+    ./bash.nix
+  ];
 
-{
   home = rec {
     username="kaka";
     homeDirectory = "/home/${username}";

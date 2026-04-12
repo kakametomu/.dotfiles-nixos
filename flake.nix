@@ -8,17 +8,18 @@
     };
   };
 
-  outputs = inputs: {
-    nixosConfigurations = {
-      vbox = inputs.nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          ./hosts/vbox/default.nix
-        ];
-	specialArgs = {
-          inherit inputs; # `inputs = inputs;`と等しい
-        };
+  outputs = inputs:
+  let
+    mkSystem = { hostname, system ? "x86_64-linux", extraModules ? [] }:
+      inputs.nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit inputs; };
+        modules = [ ./hosts/${hostname}/default.nix ] ++ extraModules;
       };
+  in {
+    nixosConfigurations = {
+      vbox = mkSystem { hostname = "vbox"; };
+      # 将来: minipc = mkSystem { hostname = "minipc"; };
     };
     homeConfigurations = {
       myHome = inputs.home-manager.lib.homeManagerConfiguration {
@@ -26,17 +27,8 @@
           system = "x86_64-linux";
           config.allowUnfree = true; # プロプライエタリなパッケージを許可
         };
-        extraSpecialArgs = {
-          inherit inputs;
-        };
-        modules = [
-          ./home/default.nix
-          ./home/git.nix
-          ./home/nvim.nix
-          ./home/zsh.nix
-          ./home/fish.nix
-          ./home/bash.nix
-        ];
+        extraSpecialArgs = { inherit inputs; };
+        modules = [ ./home/default.nix ];
       };
     };
   };
