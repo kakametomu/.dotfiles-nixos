@@ -111,10 +111,10 @@ VM の電源が切れたら、光学ドライブから ISO を取り出してか
 sudo chown -R kaka:users ~/dotfiles-nixos
 
 cd ~/dotfiles-nixos
-home-manager switch --flake .#myHome
+home-manager switch -b backup --flake .#myHome
 
 # home-manager コマンドがない場合
-nix run home-manager/master -- switch --flake .#myHome
+nix run home-manager/master -- switch --flake .#myHome -b backup
 ```
 
 ---
@@ -134,5 +134,6 @@ sudo tailscale up
 | GNOME が起動しない / 画面が黒い | VirtualBox の 3D アクセラレーションを OFF にする。VMSVGA を選択 |
 | OpenGL エラーが出る | `LIBGL_ALWAYS_SOFTWARE = "1"` が `hosts/vbox/default.nix` に設定されているか確認 |
 | `nixos-install` が失敗する | `flake.nix` の `vbox` エントリが正しいか、`hardware-configuration.nix` がコピーされているか確認 |
+| `Existing file '~/.config/...' would be clobbered` | NixOS インストール後に既存の設定ファイルが残っている。`-b backup` オプションを付けて実行すると既存ファイルを `.backup` に退避してから適用できる |
 | ブート後にネットワークに繋がらない | VirtualBox のネットワークアダプターが有効になっているか確認。`ip link` でインターフェースを確認 |
 | 起動時に `Can't lookup blockdev` / `waiting for device /dev/disk/by-uuid/...` で止まる | `hardware-configuration.nix` に書かれた UUID が実際のディスクと一致していない。Step 6 のコピーを忘れた、またはコピー前に `nixos-install` を実行した場合に発生する。ライブ環境に戻り、Step 4 → Step 6 → Step 7 の順で再実行する |
