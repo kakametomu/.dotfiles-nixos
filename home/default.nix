@@ -28,4 +28,21 @@
   };
 
   programs.home-manager.enable = true;
+
+  # カーソルテーマの設定（Wayland/X11両方に適用）
+  home.pointerCursor = {
+    gtk.enable = true;
+    x11.enable = true;
+    package = pkgs.adwaita-icon-theme;
+    name = "Adwaita";
+    size = 24;
+  };
+
+  # GNOMEのdconf設定でカーソルを明示的に指定
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      cursor-theme = "Adwaita";
+      cursor-size = 24;
+    };
+  };
 }

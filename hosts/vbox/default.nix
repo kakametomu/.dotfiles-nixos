@@ -15,7 +15,8 @@
       ./hardware-configuration.nix
       inputs.xremap.nixosModules.default
       # デスクトップ環境: kde.nix または gnome.nix を選択
-      ./kde.nix
+      # ./kde.nix
+      ./gnome.nix
     ];
 
   # xremapでキー設定をいい感じに変更
@@ -58,6 +59,10 @@
   # GTK_IM_MODULE/QT_IM_MODULEはWaylandのネイティブIMプロトコルと競合するため設定しない
   environment.sessionVariables = {
     XMODIFIERS = "@im=fcitx"; # XWaylandアプリ向け
+    XCURSOR_THEME = "Adwaita";
+    XCURSOR_SIZE = "24";
+    # VirtualBoxでGNOMEのMutterがハードウェアカーソルを描画できないため無効化
+    MUTTER_DEBUG_DISABLE_HW_CURSORS = "1";
   };
 
   i18n.extraLocaleSettings = {
