@@ -135,3 +135,4 @@ sudo tailscale up
 | OpenGL エラーが出る | `LIBGL_ALWAYS_SOFTWARE = "1"` が `hosts/vbox/default.nix` に設定されているか確認 |
 | `nixos-install` が失敗する | `flake.nix` の `vbox` エントリが正しいか、`hardware-configuration.nix` がコピーされているか確認 |
 | ブート後にネットワークに繋がらない | VirtualBox のネットワークアダプターが有効になっているか確認。`ip link` でインターフェースを確認 |
+| 起動時に `Can't lookup blockdev` / `waiting for device /dev/disk/by-uuid/...` で止まる | `hardware-configuration.nix` に書かれた UUID が実際のディスクと一致していない。Step 6 のコピーを忘れた、またはコピー前に `nixos-install` を実行した場合に発生する。ライブ環境に戻り、Step 4 → Step 6 → Step 7 の順で再実行する |
