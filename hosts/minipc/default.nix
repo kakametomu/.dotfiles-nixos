@@ -48,7 +48,8 @@
     enable = true;
     enable32Bit = true;
     extraPackages = with pkgs; [
-      amdvlk
+      # 非推奨らしいのでコメントアウト
+      # amdvlk
     ];
   };
 

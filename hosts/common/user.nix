@@ -3,8 +3,6 @@
     isNormalUser = true;
     description = "kaka";
     extraGroups = [ "networkmanager" "wheel" ];
-    # 初回ログイン用パスワード（passwd コマンドで変更後は無効）
-    initialPassword = "changeme";
     shell = pkgs.fish;
     packages = with pkgs; [];
   };

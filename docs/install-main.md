@@ -103,7 +103,22 @@ nixosConfigurations = {
 
 ```bash
 cd /mnt/home/kaka/dotfiles-nixos
+
+# flake はgit管理下のファイルのみ参照するため、追加したファイルをステージングする
+git add .
+
 nixos-install --flake .#main --root /mnt
+```
+
+インストール完了後、電源を切る前にユーザーパスワードを設定する:
+
+```bash
+nixos-enter --root /mnt -c 'passwd kaka'
+```
+
+パスワードを設定したら電源を切る:
+
+```bash
 poweroff
 ```
 
