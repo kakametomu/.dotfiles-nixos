@@ -4,8 +4,8 @@
     inputs.xremap.nixosModules.default
     ../../hosts/common/default.nix
     # デスクトップ環境: kde.nix または gnome.nix を選択
-    # ./kde.nix
-    ./gnome.nix
+    ./kde.nix
+    # ./gnome.nix
   ];
 
   networking.hostName = "vbox";
