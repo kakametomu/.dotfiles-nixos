@@ -14,6 +14,8 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       inputs.xremap.nixosModules.default
+      # デスクトップ環境: kde.nix または gnome.nix を選択
+      ./kde.nix
     ];
 
   # xremapでキー設定をいい感じに変更
@@ -52,6 +54,12 @@
   # VMware仮想環境ではOpenGL 4.1しか利用できないため、ソフトウェアレンダリングを使用
   environment.variables.LIBGL_ALWAYS_SOFTWARE = "1";
 
+  # fcitx5の日本語入力をWaylandセッションで有効化
+  # GTK_IM_MODULE/QT_IM_MODULEはWaylandのネイティブIMプロトコルと競合するため設定しない
+  environment.sessionVariables = {
+    XMODIFIERS = "@im=fcitx"; # XWaylandアプリ向け
+  };
+
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "ja_JP.UTF-8";
     LC_IDENTIFICATION = "ja_JP.UTF-8";
@@ -65,13 +73,13 @@
   };
   
   i18n.inputMethod = {
+    enable = true;
     type = "fcitx5";
     fcitx5 = {
       waylandFrontend = true;
       addons = with pkgs; [
         fcitx5-mozc-ut
         fcitx5-gtk
-        fcitx5-lua
       ];
     };
   };
@@ -96,14 +104,6 @@
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-
-  # Enable the KDE Plasma 6 Desktop Environment.
-  services.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
-
-  # Enable the GNOME Desktop Environment.
-  # services.displayManager.gdm.enable = true;
-  # services.desktopManager.gnome.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
