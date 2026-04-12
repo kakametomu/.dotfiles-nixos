@@ -34,9 +34,10 @@ lsblk
 
 ```bash
 # パーティション設定（EFI 構成）
-fdisk /dev/sda
-#   /dev/sda1 → EFI System Partition (512MB)
-#   /dev/sda2 → Linux filesystem (残り全部)
+gdisk /dev/sda
+# n, 1, (デフォルト), +512M, ef00  → EFI System Partition (512MB)
+# n, 2, (デフォルト), (デフォルト), 8300  → Linux filesystem (残り全部)
+# w → 書き込み
 
 # フォーマット
 mkfs.fat -F 32 /dev/sda1

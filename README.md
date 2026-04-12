@@ -18,6 +18,7 @@ NixOS + Home Manager によるシステム設定の管理リポジトリ。
 │   ├── fish.nix           # Fish シェル設定
 │   └── nvim/              # Neovim 設定
 ├── docs/
+│   ├── install-vbox.md    # VirtualBox インストール手順
 │   ├── install-minipc.md  # MiniPC インストール手順
 │   └── install-main.md    # メインPC インストール手順
 └── scripts/
@@ -28,6 +29,7 @@ NixOS + Home Manager によるシステム設定の管理リポジトリ。
 
 機種別の詳細手順は `docs/` を参照:
 
+- [VirtualBox VM](docs/install-vbox.md)
 - [MiniPC (AMD Ryzen 7 8745H + Radeon 780M)](docs/install-minipc.md)
 - [メインPC (Intel i7-2700 + RTX 3060 Ti)](docs/install-main.md)
 

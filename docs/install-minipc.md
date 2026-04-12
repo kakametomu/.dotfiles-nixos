@@ -33,9 +33,10 @@ lsblk
 
 ```bash
 # パーティション設定（EFI 構成）
-fdisk /dev/nvme0n1
-#   /dev/nvme0n1p1 → EFI System Partition (512MB)
-#   /dev/nvme0n1p2 → Linux filesystem (残り全部)
+gdisk /dev/nvme0n1
+# n, 1, (デフォルト), +512M, ef00  → EFI System Partition (512MB)
+# n, 2, (デフォルト), (デフォルト), 8300  → Linux filesystem (残り全部)
+# w → 書き込み
 
 # フォーマット
 mkfs.fat -F 32 /dev/nvme0n1p1
