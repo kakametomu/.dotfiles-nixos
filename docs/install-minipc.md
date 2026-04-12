@@ -12,7 +12,19 @@
 
 ---
 
-## 2. パーティション作成 & フォーマット
+## 2. root に昇格
+
+ライブ環境は `nixos` ユーザーでログインしている。以降の作業はほぼ root 権限が必要なため、最初に昇格しておく。
+
+```bash
+sudo -i
+```
+
+> 以降のコマンドはすべて root として実行する。
+
+---
+
+## 3. パーティション作成 & フォーマット
 
 ```bash
 # ディスク確認（NVMe の場合は /dev/nvme0n1）
@@ -21,43 +33,46 @@ lsblk
 
 ```bash
 # パーティション設定（EFI 構成）
-sudo fdisk /dev/nvme0n1
+fdisk /dev/nvme0n1
 #   /dev/nvme0n1p1 → EFI System Partition (512MB)
 #   /dev/nvme0n1p2 → Linux filesystem (残り全部)
 
 # フォーマット
-sudo mkfs.fat -F 32 /dev/nvme0n1p1
-sudo mkfs.ext4 /dev/nvme0n1p2
+mkfs.fat -F 32 /dev/nvme0n1p1
+mkfs.ext4 /dev/nvme0n1p2
 
 # マウント
-sudo mount /dev/nvme0n1p2 /mnt
-sudo mkdir -p /mnt/boot
-sudo mount /dev/nvme0n1p1 /mnt/boot
+mount /dev/nvme0n1p2 /mnt
+mkdir -p /mnt/boot
+mount /dev/nvme0n1p1 /mnt/boot
 ```
 
 ---
 
-## 3. ハードウェア設定の生成
+## 4. ハードウェア設定の生成
 
 ```bash
-sudo nixos-generate-config --root /mnt
+nixos-generate-config --root /mnt
 ```
 
 `/mnt/etc/nixos/hardware-configuration.nix` が生成される。
 
 ---
 
-## 4. dotfiles のクローン
+## 5. dotfiles のクローン
 
 ```bash
 nix-shell -p git
 
+mkdir -p /mnt/home/kaka
 git clone https://github.com/<owner>/<repo> /mnt/home/kaka/dotfiles-nixos
 ```
 
+> root でクローンしているためファイルの所有者が root になる。初回ログイン後に修正する（手順 9 参照）。
+
 ---
 
-## 5. ホスト設定を作成
+## 6. ホスト設定を作成
 
 ```bash
 mkdir -p /mnt/home/kaka/dotfiles-nixos/hosts/minipc
@@ -96,7 +111,7 @@ environment.variables.AMD_VULKAN_ICD = "RADV";
 
 ---
 
-## 6. flake.nix にホスト設定を追加
+## 7. flake.nix にホスト設定を追加
 
 `flake.nix` の `nixosConfigurations` に追記する:
 
@@ -113,19 +128,24 @@ nixosConfigurations = {
 
 ---
 
-## 7. NixOS をインストール
+## 8. NixOS をインストール
 
 ```bash
 cd /mnt/home/kaka/dotfiles-nixos
-sudo nixos-install --flake .#minipc --root /mnt
-sudo reboot
+nixos-install --flake .#minipc --root /mnt
+poweroff
 ```
+
+電源が切れたら USB を抜いてから電源を入れる。
 
 ---
 
-## 8. 再起動後: Home Manager の適用
+## 9. 再起動後: 所有者の修正 & Home Manager の適用
 
 ```bash
+# dotfiles の所有者を kaka に変更
+sudo chown -R kaka:users ~/dotfiles-nixos
+
 cd ~/dotfiles-nixos
 home-manager switch --flake .#myHome
 
@@ -133,15 +153,9 @@ home-manager switch --flake .#myHome
 nix run home-manager/master -- switch --flake .#myHome
 ```
 
-ユーザーパスワードを設定していない場合:
-
-```bash
-passwd kaka
-```
-
 ---
 
-## 9. Tailscale の認証
+## 10. Tailscale の認証
 
 ```bash
 sudo tailscale up
