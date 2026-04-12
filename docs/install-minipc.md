@@ -73,57 +73,28 @@ git clone https://github.com/<owner>/<repo> /mnt/home/kaka/dotfiles-nixos
 
 ---
 
-## 6. ホスト設定を作成
+## 6. ハードウェア設定をコピー
+
+`hosts/minipc/default.nix`・`hosts/minipc/kde.nix`・`hosts/minipc/gnome.nix` はリポジトリに含まれている。
+`hardware-configuration.nix` のみコピーすればよい。
 
 ```bash
-mkdir -p /mnt/home/kaka/dotfiles-nixos/hosts/minipc
-
-# 生成したハードウェア設定をコピー
 cp /mnt/etc/nixos/hardware-configuration.nix \
    /mnt/home/kaka/dotfiles-nixos/hosts/minipc/
 ```
 
-`hosts/minipc/default.nix` を作成する。`hosts/vbox/default.nix` をベースに以下を変更:
-
-- `environment.variables.LIBGL_ALWAYS_SOFTWARE = "1"` を**削除**（VM 専用の設定）
-- `inputs.xremap.nixosModules.default` は**そのまま**（CapsLock→Ctrl）
-- デスクトップ環境は**そのまま** GNOME
-- 以下を**追加**:
-
-```nix
-# AMD CPU マイクロコードアップデート
-hardware.cpu.amd.updateMicrocode = true;
-
-# AMD GPU ドライバー（Radeon 780M / RDNA 3）
-services.xserver.videoDrivers = ["amdgpu"];
-
-# ハードウェアアクセラレーション
-hardware.graphics = {
-  enable = true;
-  enable32Bit = true;
-  extraPackages = with pkgs; [
-    amdvlk
-  ];
-};
-
-# Vulkan は Mesa の RADV を優先（安定性が高い）
-environment.variables.AMD_VULKAN_ICD = "RADV";
-```
+> デスクトップ環境を変更したい場合は `hosts/minipc/default.nix` の import を編集する（デフォルトは KDE、`./gnome.nix` に切り替え可）。
 
 ---
 
-## 7. flake.nix にホスト設定を追加
+## 7. flake.nix のコメントを外す
 
-`flake.nix` の `nixosConfigurations` に追記する:
+`flake.nix` の `minipc` エントリはすでに存在しているのでコメントを外す:
 
 ```nix
 nixosConfigurations = {
-  minipc = inputs.nixpkgs.lib.nixosSystem {
-    system = "x86_64-linux";
-    modules = [ ./hosts/minipc/default.nix ];
-    specialArgs = { inherit inputs; };
-  };
-  vbox = ...; # 既存の設定
+  vbox = mkSystem { hostname = "vbox"; };
+  minipc = mkSystem { hostname = "minipc"; }; # ← コメントを外す
 };
 ```
 

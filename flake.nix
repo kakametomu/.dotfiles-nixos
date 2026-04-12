@@ -19,7 +19,10 @@
   in {
     nixosConfigurations = {
       vbox = mkSystem { hostname = "vbox"; };
-      # 将来: minipc = mkSystem { hostname = "minipc"; };
+      # hosts/main/hardware-configuration.nix を追加してからコメントを外す
+      # main = mkSystem { hostname = "main"; };
+      # hosts/minipc/hardware-configuration.nix を追加してからコメントを外す
+      # minipc = mkSystem { hostname = "minipc"; };
     };
     homeConfigurations = {
       myHome = inputs.home-manager.lib.homeManagerConfiguration {

@@ -131,7 +131,7 @@ sudo tailscale up
 
 | 症状 | 対処 |
 |------|------|
-| GNOME が起動しない / 画面が黒い | VirtualBox の 3D アクセラレーションを OFF にする。VMSVGA を選択 |
+| KDE が起動しない / 画面が黒い | VirtualBox の 3D アクセラレーションを OFF にする。VMSVGA を選択 |
 | OpenGL エラーが出る | `LIBGL_ALWAYS_SOFTWARE = "1"` が `hosts/vbox/default.nix` に設定されているか確認 |
 | `nixos-install` が失敗する | `flake.nix` の `vbox` エントリが正しいか、`hardware-configuration.nix` がコピーされているか確認 |
 | `Existing file '~/.config/...' would be clobbered` | NixOS インストール後に既存の設定ファイルが残っている。`-b backup` オプションを付けて実行すると既存ファイルを `.backup` に退避してから適用できる |

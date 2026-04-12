@@ -74,72 +74,26 @@ git clone https://github.com/<owner>/<repo> /mnt/home/kaka/dotfiles-nixos
 
 ---
 
-## 6. ホスト設定を作成
+## 6. ハードウェア設定をコピー
+
+`hosts/main/default.nix` および `hosts/main/kde.nix` はリポジトリに含まれている。
+`hardware-configuration.nix` のみコピーすればよい。
 
 ```bash
-mkdir -p /mnt/home/kaka/dotfiles-nixos/hosts/main
-
-# 生成したハードウェア設定をコピー
 cp /mnt/etc/nixos/hardware-configuration.nix \
    /mnt/home/kaka/dotfiles-nixos/hosts/main/
 ```
 
-`hosts/main/default.nix` を作成する。`hosts/vbox/default.nix` をベースに以下を変更:
-
-- `environment.variables.LIBGL_ALWAYS_SOFTWARE = "1"` を**削除**（VM 専用の設定）
-- `inputs.xremap.nixosModules.default` は**そのまま**（CapsLock→Ctrl）
-- デスクトップ環境を **GNOME → KDE Plasma 6** に変更:
-
-```nix
-# GNOME の設定を削除
-# services.displayManager.gdm.enable = true;
-# services.desktopManager.gnome.enable = true;
-
-# KDE Plasma 6 に変更
-services.displayManager.sddm = {
-  enable = true;
-  wayland.enable = true;
-};
-services.desktopManager.plasma6.enable = true;
-```
-
-- 以下を**追加**:
-
-```nix
-# Intel CPU マイクロコードアップデート
-hardware.cpu.intel.updateMicrocode = true;
-
-# NVIDIA ドライバー（RTX 3060 Ti）
-services.xserver.videoDrivers = ["nvidia"];
-
-hardware.nvidia = {
-  modesetting.enable = true;
-  powerManagement.enable = false;
-  open = false; # プロプライエタリドライバーを使用
-  nvidiaSettings = true;
-  package = config.boot.kernelPackages.nvidiaPackages.stable;
-};
-
-hardware.graphics = {
-  enable = true;
-  enable32Bit = true;
-};
-```
-
 ---
 
-## 7. flake.nix にホスト設定を追加
+## 7. flake.nix のコメントを外す
 
-`flake.nix` の `nixosConfigurations` に追記する:
+`flake.nix` の `main` エントリはすでに存在しているのでコメントを外す:
 
 ```nix
 nixosConfigurations = {
-  main = inputs.nixpkgs.lib.nixosSystem {
-    system = "x86_64-linux";
-    modules = [ ./hosts/main/default.nix ];
-    specialArgs = { inherit inputs; };
-  };
-  vbox = ...; # 既存の設定
+  vbox = mkSystem { hostname = "vbox"; };
+  main = mkSystem { hostname = "main"; }; # ← コメントを外す
 };
 ```
 
