@@ -157,7 +157,7 @@
 
       # その他
       c   = "clear";
-      dot = "cd ~/.dotfiles-nixos";
+      dot = "cd ~/dotfiles-nixos";
       dev = "tmux-development.sh";
     };
   };

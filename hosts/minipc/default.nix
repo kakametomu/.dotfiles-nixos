@@ -4,8 +4,8 @@
     inputs.xremap.nixosModules.default
     ../../hosts/common/default.nix
     # デスクトップ環境: どちらか一方を有効化
-    # ./kde.nix
-    ./gnome.nix
+    ./kde.nix
+    # ./gnome.nix
   ];
 
   networking.hostName = "minipc";
