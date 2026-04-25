@@ -155,6 +155,10 @@
       gcam = "git commit -a -m";
       gcad = "git commit -a --amend";
 
+      # NixOS / Home Manager
+      hms = "home-manager switch --flake .#myHome";
+      nrs = "sudo nixos-rebuild switch --flake .";
+
       # その他
       c   = "clear";
       dot = "cd ~/dotfiles-nixos";
