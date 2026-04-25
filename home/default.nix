@@ -5,6 +5,7 @@
     ./zsh.nix
     ./fish.nix
     ./bash.nix
+    ./plasma.nix
   ];
 
   home = rec {
@@ -20,6 +21,7 @@
     fzf
     zoxide
     claude-code
+    google-chrome
   ];
 
   # 全シェル共通のエイリアス（fish固有のものはfish.nixで管理）

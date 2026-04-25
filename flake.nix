@@ -6,6 +6,11 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    plasma-manager = {
+      url = "github:nix-community/plasma-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
   };
 
   outputs = inputs:
@@ -31,7 +36,10 @@
           config.allowUnfree = true; # プロプライエタリなパッケージを許可
         };
         extraSpecialArgs = { inherit inputs; };
-        modules = [ ./home/default.nix ];
+        modules = [
+          ./home/default.nix
+          inputs.plasma-manager.homeManagerModules.plasma-manager
+        ];
       };
     };
   };
