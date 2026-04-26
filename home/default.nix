@@ -67,11 +67,4 @@
     size = 24;
   };
 
-  # GNOMEのdconf設定でカーソルを明示的に指定
-  dconf.settings = {
-    "org/gnome/desktop/interface" = {
-      cursor-theme = "Adwaita";
-      cursor-size = 24;
-    };
-  };
 }

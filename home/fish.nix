@@ -156,7 +156,7 @@
       gcad = "git commit -a --amend";
 
       # NixOS / Home Manager
-      hms = "home-manager switch --flake .#myHome";
+      hms = "home-manager switch --flake .#myHome && plasmashell --replace &";
       nrs = "sudo nixos-rebuild switch --flake .";
 
       # その他
