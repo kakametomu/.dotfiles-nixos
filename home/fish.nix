@@ -160,7 +160,7 @@
       nrs = "sudo nixos-rebuild switch --flake .";
 
       # その他
-      c   = "clear";
+      cc  = "clear";
       dot = "cd ~/dotfiles-nixos";
       dev = "tmux-development.sh";
     };

@@ -21,7 +21,7 @@ config.window_background_opacity = 0.95
 config.text_background_opacity = 0.85
 
 -- ウィンドウ装飾の設定（タイトルバーのみ非表示）
-config.window_decorations = "RESIZE"
+config.window_decorations = "TITLE | RESIZE"
 
 -- タブが1つだけのときにタブバーを非表示にする設定
 config.hide_tab_bar_if_only_one_tab = false
@@ -29,7 +29,8 @@ config.hide_tab_bar_if_only_one_tab = false
 config.font = wezterm.font_with_fallback({
 	-- "JetBrains Mono",
 	-- "Hack Nerd Font",
-    "CaskaydiaMono Nerd Font"
+    "CaskaydiaMono Nerd Font",
+    "Noto Sans CJK JP",
 })
 
 -- フォントサイズを指定

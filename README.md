@@ -46,7 +46,7 @@ sudo nixos-rebuild switch --flake .#minipc
 sudo nixos-rebuild switch --flake .#main
 
 # パスを直接指定する場合
-sudo nixos-rebuild switch --flake ~/.dotfiles-nixos#vbox
+sudo nixos-rebuild switch --flake ~/dotfiles-nixos#vbox
 ```
 
 ### Home Manager の適用

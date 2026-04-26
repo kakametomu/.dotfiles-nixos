@@ -4,8 +4,10 @@
 
   # Configure keymap in X11
   services.xserver.xkb = {
-    layout = "us";
-    variant = "";
+    # jp,us の順で両レイアウトを登録
+    # KDE Plasmaのキーボードレイアウトウィジェットで切り替え可能
+    layout = "jp,us";
+    variant = ",";
   };
 
   # Enable CUPS to print documents.
