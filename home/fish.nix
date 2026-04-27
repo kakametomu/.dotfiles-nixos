@@ -6,6 +6,10 @@
       set -g fish_greeting ""
       set -gx EDITOR vim
       set -gx DIRENV_LOG_FORMAT ""
+      # j コマンドの検索対象ディレクトリ
+      set -g J_SEARCH_DIRS ~/dotfiles-nixos ~ Work
+      # j コマンドの除外パターン
+      set -g J_EXCLUDE_DIRS .git node_modules .cache .claude
     '';
 
     functions = {
@@ -117,6 +121,30 @@
         end
       '';
 
+      # ディレクトリ名で検索してジャンプ
+      j = ''
+        if test (count $argv) -eq 0
+          echo "Usage: j <directory-name>"
+          return 1
+        end
+
+        set -l exclude_args
+        for pattern in $J_EXCLUDE_DIRS
+          set exclude_args $exclude_args -not -path "*/$pattern" -not -path "*/$pattern/*"
+        end
+
+        set -l result (find $J_SEARCH_DIRS -maxdepth 6 -type d $exclude_args 2>/dev/null | fzf --select-1 --exit-0 --query $argv[1] --delimiter=/ --nth=-1)
+
+        if test -n "$result"
+          builtin cd $result
+          printf "\U000F17A9 "
+          pwd
+        else
+          echo "Directory not found: $argv[1]"
+          return 1
+        end
+      '';
+
       # xdg-openをバックグラウンドで実行
       open = ''
         xdg-open $argv >/dev/null 2>&1 &
@@ -156,11 +184,12 @@
       gcad = "git commit -a --amend";
 
       # NixOS / Home Manager
-      hms = "home-manager switch --flake .#myHome && plasmashell --replace &";
+      hms = "home-manager switch --flake .#myHome && systemctl --user restart plasma-plasmashell.service";
       nrs = "sudo nixos-rebuild switch --flake .";
 
       # その他
       mk  = "mkdir -p";
+      to  = "touch";
       cc  = "clear";
       dot = "cd ~/dotfiles-nixos";
       dev = "tmux-development.sh";
