@@ -21,6 +21,7 @@
     ripgrep
     fzf
     zoxide
+    tmux
     claude-code
     google-chrome
     # UpNote: nixpkgs未対応のため AppImage をラッパーで起動
@@ -53,6 +54,7 @@
   home.file = {
     ".config/ghostty/".source = ./ghostty;
     ".config/wezterm/".source = ./wezterm;
+    ".config/tmux/tmux.conf".source = ./tmux/tmux.conf;
     ".local/share/icons/hicolor/256x256/apps/upnote.png".source = ./icons/upnote.png;
   };
 
