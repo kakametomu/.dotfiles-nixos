@@ -10,6 +10,15 @@
       rows = 1;
     };
 
+    shortcuts = {
+      kwin = {
+        "Switch to Desktop 1" = "Ctrl+1";
+        "Switch to Desktop 2" = "Ctrl+2";
+        "Switch to Desktop 3" = "Ctrl+3";
+        "Switch to Desktop 4" = "Ctrl+4";
+      };
+    };
+
     # Cinnamonライクなパネルレイアウト
     # 左: アプリランチャー → タスクバー → 右: システムトレイ → 時計
     panels = [

@@ -2,6 +2,7 @@
   imports = [
     ./git.nix
     ./nvim.nix
+    ./zed.nix
     ./zsh.nix
     ./fish.nix
     ./bash.nix

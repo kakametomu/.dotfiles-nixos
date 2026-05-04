@@ -4,6 +4,7 @@
     settings = {
       user.name = "kaka";
       user.email = "kaka@example.com"; # TODO: 本物のメールアドレスに変更する
+      init.defaultBranch = "main";
     };
   };
 

@@ -184,7 +184,8 @@
       gcad = "git commit -a --amend";
 
       # NixOS / Home Manager
-      hms = "home-manager switch --flake .#myHome && systemctl --user restart plasma-plasmashell.service";
+      hms = "home-manager switch --flake .#myHome";
+      hmse = "home-manager switch --flake .#myHome && systemctl --user restart plasma-plasmashell.service";
       nrs = "sudo nixos-rebuild switch --flake .";
 
       # その他
