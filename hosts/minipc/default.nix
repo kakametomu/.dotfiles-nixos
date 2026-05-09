@@ -6,6 +6,9 @@
     # デスクトップ環境: どちらか一方を有効化
     ./kde.nix
     # ./gnome.nix
+    # キーボード: どちらか一方を有効化
+    # ./keyboard-jis.nix
+    ./keyboard-us.nix
   ];
 
   networking.hostName = "minipc";
@@ -18,24 +21,6 @@
   environment.sessionVariables = {
     XCURSOR_THEME = "Adwaita";
     XCURSOR_SIZE = "24";
-  };
-
-  # xremapでキー設定をいい感じに変更
-  services.xremap = {
-    enable = true;
-    userName = "kaka";
-    serviceMode = "system";
-    config = {
-      modmap = [
-        {
-          # CapsLockをCtrlに置換
-          name = "CapsLock is dead";
-          remap = {
-            CapsLock = "Ctrl_L";
-          };
-        }
-      ];
-    };
   };
 
   # AMD CPU マイクロコードアップデート
@@ -67,7 +52,10 @@
     brave
     ghostty
     wezterm
-    vivaldi
+    (vivaldi.override {
+      proprietaryCodecs = true;
+      enableWidevine = false;
+    })
     chromium
     vscode
   ];
