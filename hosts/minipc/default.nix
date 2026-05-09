@@ -1,27 +1,15 @@
-{ inputs, pkgs, ... }: {
+{ pkgs, ... }: {
   imports = [
     ./hardware-configuration.nix
-    inputs.xremap.nixosModules.default
     ../../hosts/common/default.nix
     # デスクトップ環境: どちらか一方を有効化
     ./kde.nix
     # ./gnome.nix
-    # キーボード: どちらか一方を有効化
-    # ./keyboard-jis.nix
+    # キーボード: USキーボードの場合のみ有効化（JISはcommon/xremap.nixの設定のみで対応）
     ./keyboard-us.nix
   ];
 
   networking.hostName = "minipc";
-
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  networking.networkmanager.enable = true;
-
-  environment.sessionVariables = {
-    XCURSOR_THEME = "Adwaita";
-    XCURSOR_SIZE = "24";
-  };
 
   # AMD CPU マイクロコードアップデート
   hardware.cpu.amd.updateMicrocode = true;
@@ -32,32 +20,16 @@
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
-    extraPackages = with pkgs; [
-      # 非推奨らしいのでコメントアウト
-      # amdvlk
-    ];
   };
 
   # Vulkan は Mesa の RADV を優先（安定性が高い）
   environment.variables.AMD_VULKAN_ICD = "RADV";
 
   environment.systemPackages = with pkgs; [
-    vim
-    neovim
-    wget
-    curl
-    appimage-run
-    # GUI
-    bitwarden-desktop
-    brave
-    ghostty
-    wezterm
     (vivaldi.override {
       proprietaryCodecs = true;
       enableWidevine = false;
     })
-    chromium
-    vscode
   ];
 
   system.stateVersion = "25.11";

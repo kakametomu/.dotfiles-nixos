@@ -10,6 +10,11 @@
     variant = ",";
   };
 
+  environment.sessionVariables = {
+    XCURSOR_THEME = "Adwaita";
+    XCURSOR_SIZE = "24";
+  };
+
   # Enable CUPS to print documents.
   services.printing.enable = true;
 

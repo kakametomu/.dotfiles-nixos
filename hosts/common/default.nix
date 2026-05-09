@@ -6,5 +6,8 @@
     ./desktop.nix
     ./user.nix
     ./nix.nix
+    ./boot.nix
+    ./packages.nix
+    ./xremap.nix
   ];
 }

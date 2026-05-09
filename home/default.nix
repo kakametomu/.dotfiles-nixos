@@ -11,7 +11,7 @@
   ];
 
   home = rec {
-    username="kaka";
+    username = "kaka";
     homeDirectory = "/home/${username}";
     stateVersion = "25.11";
   };
@@ -32,20 +32,6 @@
     '')
   ];
 
-  home.file.".local/share/applications/upnote.desktop" = {
-    force = true;
-    text = ''
-      [Desktop Entry]
-      Name=UpNote
-      Exec=upnote %U
-      Icon=upnote
-      Comment=Beautiful, simple note taking app
-      Type=Application
-      Categories=Office;
-      Terminal=false
-    '';
-  };
-
   # 全シェル共通のエイリアス（fish固有のものはfish.nixで管理）
   home.shellAliases = {
     cat  = "bat";
@@ -53,6 +39,19 @@
   };
 
   home.file = {
+    ".local/share/applications/upnote.desktop" = {
+      force = true;
+      text = ''
+        [Desktop Entry]
+        Name=UpNote
+        Exec=upnote %U
+        Icon=upnote
+        Comment=Beautiful, simple note taking app
+        Type=Application
+        Categories=Office;
+        Terminal=false
+      '';
+    };
     ".config/ghostty/".source = ./ghostty;
     ".config/wezterm/".source = ./wezterm;
     ".config/tmux/tmux.conf".source = ./tmux/tmux.conf;
@@ -69,5 +68,4 @@
     name = "Adwaita";
     size = 24;
   };
-
 }

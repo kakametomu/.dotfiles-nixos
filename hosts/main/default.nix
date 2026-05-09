@@ -1,40 +1,11 @@
-{ inputs, config, pkgs, ... }: {
+{ config, pkgs, ... }: {
   imports = [
     ./hardware-configuration.nix
-    inputs.xremap.nixosModules.default
     ../../hosts/common/default.nix
     ./kde.nix
   ];
 
   networking.hostName = "main";
-
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  networking.networkmanager.enable = true;
-
-  environment.sessionVariables = {
-    XCURSOR_THEME = "Adwaita";
-    XCURSOR_SIZE = "24";
-  };
-
-  # xremapでキー設定をいい感じに変更
-  services.xremap = {
-    enable = true;
-    userName = "kaka";
-    serviceMode = "system";
-    config = {
-      modmap = [
-        {
-          # CapsLockをCtrlに置換
-          name = "CapsLock is dead";
-          remap = {
-            CapsLock = "Ctrl_L";
-          };
-        }
-      ];
-    };
-  };
 
   # Intel CPU マイクロコードアップデート
   hardware.cpu.intel.updateMicrocode = true;
@@ -56,19 +27,7 @@
   };
 
   environment.systemPackages = with pkgs; [
-    vim
-    neovim
-    wget
-    curl
-    appimage-run
-    # GUI
-    bitwarden-desktop
-    brave
-    ghostty
-    wezterm
     vivaldi
-    chromium
-    vscode
   ];
 
   system.stateVersion = "25.11";
