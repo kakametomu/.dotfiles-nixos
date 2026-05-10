@@ -6,7 +6,7 @@
   #       fcitx5がファイルに書き込もうとするとエラーログが出るが動作には影響しない
   xdg.configFile."fcitx5/config".text = ''
     [Hotkey]
-    TriggerKeys/0=
+    TriggerKeys/0=Control+space
     ActivateKeys/0=Henkan_Mode
     DeactivateKeys/0=Muhenkan
   '';
