@@ -12,5 +12,6 @@
     wezterm
     chromium
     vscode
+    obs-studio
   ];
 }
