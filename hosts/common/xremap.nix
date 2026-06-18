@@ -13,4 +13,10 @@
       }
     ];
   };
+
+  # 起動時にUSBデバイスが未列挙でも再試行する
+  systemd.services.xremap.serviceConfig = {
+    Restart = "on-failure";
+    RestartSec = "2s";
+  };
 }

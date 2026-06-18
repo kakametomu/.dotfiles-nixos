@@ -5,6 +5,9 @@
     wget
     curl
     appimage-run
+    # カメラテスト・設定用ツール
+    v4l-utils
+    ffmpeg
     # GUI
     bitwarden-desktop
     brave
@@ -13,5 +16,6 @@
     chromium
     vscode
     obs-studio
+    foliate
   ];
 }

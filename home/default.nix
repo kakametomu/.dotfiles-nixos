@@ -24,6 +24,7 @@
     zoxide
     tmux
     claude-code
+    codex
     google-chrome
     # UpNote: nixpkgs未対応のため AppImage をラッパーで起動
     # AppImage本体は ~/Applications/UpNote.AppImage に配置すること

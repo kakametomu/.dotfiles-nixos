@@ -2,7 +2,7 @@
   users.users.kaka = {
     isNormalUser = true;
     description = "kaka";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "video"];
     shell = pkgs.fish;
   };
 

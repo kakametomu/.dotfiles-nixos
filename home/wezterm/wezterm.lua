@@ -34,6 +34,6 @@ config.font = wezterm.font_with_fallback({
 })
 
 -- フォントサイズを指定
-config.font_size = 12.0
+config.font_size = 11.0
 
 return config
