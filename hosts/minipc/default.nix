@@ -2,9 +2,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../hosts/common/default.nix
-    # デスクトップ環境: どちらか一方を有効化
     ./kde.nix
-    # ./gnome.nix
     # キーボード: USキーボードの場合のみ有効化（JISはcommon/xremap.nixの設定のみで対応）
     ./keyboard-us.nix
   ];

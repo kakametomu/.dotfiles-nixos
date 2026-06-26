@@ -17,5 +17,6 @@
     vscode
     obs-studio
     foliate
+    signal-desktop
   ];
 }

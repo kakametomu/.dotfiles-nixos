@@ -75,7 +75,7 @@ git clone https://github.com/<owner>/<repo> /mnt/home/kaka/dotfiles-nixos
 
 ## 6. ハードウェア設定をコピー
 
-`hosts/minipc/default.nix`・`hosts/minipc/kde.nix`・`hosts/minipc/gnome.nix` はリポジトリに含まれている。
+`hosts/minipc/default.nix`・`hosts/minipc/kde.nix` はリポジトリに含まれている。
 `hardware-configuration.nix` のみコピーすればよい。
 
 ```bash
@@ -83,7 +83,7 @@ cp /mnt/etc/nixos/hardware-configuration.nix \
    /mnt/home/kaka/dotfiles-nixos/hosts/minipc/
 ```
 
-> デスクトップ環境を変更したい場合は `hosts/minipc/default.nix` の import を編集する（デフォルトは KDE、`./gnome.nix` に切り替え可）。
+> MiniPC は KDE Plasma に統一する。GNOME 設定は検証用に残していたが、KDE を常用環境にする方針にしたため削除した。
 
 ---
 
@@ -156,4 +156,4 @@ sudo tailscale up
 |------|------|
 | 画面が映らない / GPU 認識されない | `lspci \| grep VGA` でデバイス確認。`amdgpu` モジュールが読まれているか `lsmod` で確認 |
 | `nixos-install` が失敗する | flake.nix の `minipc` エントリが正しく追記されているか確認 |
-| ブート後に GNOME が起動しない | `journalctl -b -p err` でエラーを確認 |
+| ブート後に KDE Plasma が起動しない | `journalctl -b -p err` と `journalctl -u display-manager` でエラーを確認 |
