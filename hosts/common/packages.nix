@@ -18,5 +18,6 @@
     obs-studio
     foliate
     signal-desktop
+    obsidian
   ];
 }
