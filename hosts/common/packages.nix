@@ -5,6 +5,7 @@
     wget
     curl
     appimage-run
+    devenv
     # カメラテスト・設定用ツール
     v4l-utils
     ffmpeg
