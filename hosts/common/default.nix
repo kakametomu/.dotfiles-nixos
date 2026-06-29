@@ -1,5 +1,6 @@
-{ ... }: {
+{ inputs, ... }: {
   imports = [
+    inputs.nix-flatpak.nixosModules.nix-flatpak
     ./locale.nix
     ./fonts.nix
     ./input-method.nix
@@ -8,6 +9,7 @@
     ./nix.nix
     ./boot.nix
     ./packages.nix
+    ./flatpak.nix
     ./xremap.nix
   ];
 }
