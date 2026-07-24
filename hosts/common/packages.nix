@@ -10,7 +10,6 @@
     v4l-utils
     ffmpeg
     # GUI
-    # bitwarden-desktop
     brave
     ghostty
     wezterm

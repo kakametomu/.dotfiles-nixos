@@ -5,6 +5,8 @@
     enable = true;
     userName = "kaka";
     serviceMode = "system";
+    # 起動後に列挙されるUSBキーボードも対象にする
+    watch = true;
     config.modmap = [
       {
         # CapsLockをCtrlに置換

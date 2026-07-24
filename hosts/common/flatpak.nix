@@ -6,6 +6,7 @@
     enable = true;
     packages = [
       { appId = "com.bitwarden.desktop"; origin = "flathub"; }
+      { appId = "io.dbeaver.DBeaverCommunity"; origin = "flathub"; }
     ];
     update.auto = {
       enable = true;
