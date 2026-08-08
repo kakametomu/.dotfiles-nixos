@@ -64,6 +64,7 @@
 
   # カーソルテーマの設定（Wayland/X11両方に適用）
   home.pointerCursor = {
+    enable = true;
     gtk.enable = true;
     x11.enable = true;
     package = pkgs.adwaita-icon-theme;
