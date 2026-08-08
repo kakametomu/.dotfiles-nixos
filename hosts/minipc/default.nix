@@ -3,8 +3,6 @@
     ./hardware-configuration.nix
     ../../hosts/common/default.nix
     ./kde.nix
-    # キーボード: USキーボードの場合のみ有効化（JISはcommon/xremap.nixの設定のみで対応）
-    ./keyboard-us.nix
   ];
 
   networking.hostName = "minipc";

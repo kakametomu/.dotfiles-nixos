@@ -3,7 +3,8 @@
     enable = true;
     settings = {
       user.name = "kaka";
-      user.email = "kaka@example.com"; # TODO: 本物のメールアドレスに変更する
+      # GitHubのnoreplyアドレス（実メールアドレスの公開を避ける）
+      user.email = "111382108+kakametomu@users.noreply.github.com";
       init.defaultBranch = "main";
     };
   };

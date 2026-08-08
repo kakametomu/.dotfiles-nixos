@@ -4,10 +4,9 @@
 
     shellInit = ''
       set -g fish_greeting ""
-      set -gx EDITOR vim
       set -gx DIRENV_LOG_FORMAT ""
-      # j コマンドの検索対象ディレクトリ
-      set -g J_SEARCH_DIRS ~/dotfiles-nixos ~ Work
+      # j コマンドの検索対象ディレクトリ（~はmaxdepth 6まで全体を検索対象に含む）
+      set -g J_SEARCH_DIRS ~
       # j コマンドの除外パターン
       set -g J_EXCLUDE_DIRS .git node_modules .cache .claude
     '';
