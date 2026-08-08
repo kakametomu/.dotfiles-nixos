@@ -17,7 +17,6 @@ NixOS + Home Manager によるシステム設定の管理リポジトリ。
 │   ├── git.nix            # Git 設定
 │   ├── fish.nix           # Fish シェル設定 (メインシェル)
 │   ├── plasma.nix         # KDE Plasma 設定 (plasma-manager)
-│   ├── walker.nix         # Walker ランチャー設定
 │   └── nvim/              # Neovim 設定
 ├── docs/
 │   ├── install-vbox.md    # VirtualBox インストール手順

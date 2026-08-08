@@ -8,7 +8,6 @@
     ./bash.nix
     ./plasma.nix
     ./fcitx5.nix
-    ./walker.nix
   ];
 
   home = rec {
