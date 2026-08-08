@@ -30,7 +30,7 @@
     # UpNote: nixpkgs未対応のため AppImage をラッパーで起動
     # AppImage本体は ~/Applications/UpNote.AppImage に配置すること
     (pkgs.writeShellScriptBin "upnote" ''
-      exec ${pkgs.appimage-run}/bin/appimage-run ${config.home.homeDirectory}/Applications/UpNote.AppImage --no-sandbox --ozone-platform=wayland "$@"
+      exec ${pkgs.appimage-run}/bin/appimage-run ${config.home.homeDirectory}/Applications/UpNote.AppImage --ozone-platform=wayland "$@"
     '')
   ];
 

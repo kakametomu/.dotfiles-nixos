@@ -15,8 +15,15 @@
     };
   };
 
-  # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  # OpenSSHデーモン（Tailscale経由のみ・公開鍵認証のみ）
+  services.openssh = {
+    enable = true;
+    openFirewall = false; # LANには公開しない（tailscale0はtrustedInterfacesなので接続可）
+    settings = {
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+    };
+  };
 
   # tailscale（VPN）を有効化
   services.tailscale.enable = true;
@@ -28,14 +35,9 @@
     allowedUDPPorts = [config.services.tailscale.port];
   };
 
-  # Dockerをrootlessで有効化
-  virtualisation = {
-    docker = {
-      enable = true;
-      rootless = {
-        enable = true;
-        setSocketVariable = true; # $DOCKER_HOSTを設定
-      };
-    };
+  # Dockerをrootlessのみで有効化（rootデーモンは起動しない）
+  virtualisation.docker.rootless = {
+    enable = true;
+    setSocketVariable = true; # $DOCKER_HOSTを設定
   };
 }
