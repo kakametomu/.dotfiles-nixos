@@ -23,6 +23,7 @@
     fzf
     zoxide
     tmux
+    herdr
     claude-code
     codex
     google-chrome
