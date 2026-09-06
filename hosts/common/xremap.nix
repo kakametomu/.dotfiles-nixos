@@ -1,4 +1,4 @@
-{ inputs, ... }: {
+{ inputs, lib, ... }: {
   imports = [ inputs.xremap.nixosModules.default ];
 
   services.xremap = {
@@ -19,6 +19,6 @@
   # 起動時にUSBデバイスが未列挙でも再試行する
   systemd.services.xremap.serviceConfig = {
     Restart = "on-failure";
-    RestartSec = "2s";
+    RestartSec = lib.mkForce "2s";
   };
 }
