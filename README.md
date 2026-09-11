@@ -63,6 +63,21 @@ home-manager switch --flake .#myHome
 sudo nix-collect-garbage -d
 ```
 
+### flake 入力の更新
+
+`nix flake update` は `flake.lock` に記録された全入力（`nixpkgs`, `home-manager`, `xremap`, `plasma-manager`, `nix-flatpak`）を最新コミットに更新する。NixOS・Home Manager 本体に加え、これらが依存するパッケージ集合（nixpkgs）もまとめて更新対象になる。
+
+```bash
+# 全入力を更新
+nix flake update
+
+# 特定の入力だけ更新したい場合
+nix flake update nixpkgs
+nix flake update home-manager
+```
+
+`flake.lock` が更新されるだけで、実際にシステムへ反映するには前述の `nixos-rebuild switch` / `home-manager switch` を別途実行する必要がある。
+
 ## UpNote
 
 nixpkgs 未対応のため AppImage を手動配置する:
