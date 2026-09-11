@@ -16,7 +16,8 @@ vim.keymap.set('x', 'P', 'p', { desc = 'Paste with change register' })
 -- デフォルトではdでカットすると無名レジスタに値を保存するため、直前にコピーしていた値を上書きしてしまいします。
 -- そこで、_（ブラックホールレジスタ：ここに入れられた値は読み出すことはできず捨てられる）を使用するアイデアがあります。
 -- 以下のように指定すると、xをレジスタの値を変えない削除オペレータとして使うことができます。
-vim.keymap.set({ 'n', 'x' }, 'x', '"_d', { desc = 'Delete using blackhole register' })
+-- vim.keymap.set({ 'n', 'x' }, 'x', '"_d', { desc = 'Delete using blackhole register' })
+vim.keymap.set({ 'n', 'x' }, 'x', '"_x', { desc = 'Delete using blackhole register' })
 vim.keymap.set('n', 'X', '"_D', { desc = 'Delete using blackhole register' })
 vim.keymap.set('o', 'x', 'd', { desc = 'Delete using x' })
 
