@@ -1,9 +1,9 @@
 {pkgs, ...}: {
   programs.neovim = {
     enable = true;
-    defaultEditor = true;
-    viAlias = true;
-    vimAlias = true;
+    defaultEditor = false;
+    viAlias = false;
+    vimAlias = false;
     # Lua中心の構成でRuby/Pythonプロバイダは未使用（26.05以降のデフォルトを先取り）
     withRuby = false;
     withPython3 = false;
