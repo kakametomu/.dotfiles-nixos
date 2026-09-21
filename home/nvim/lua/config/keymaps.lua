@@ -35,10 +35,10 @@ vim.keymap.set('n', '<space>;', '@:', { desc = 'Re-run the last command' })
 -- <space>wのキーコンビネーションで保存を実行することができる。
 vim.keymap.set('n', '<space>w', '<cmd>write<cr>', { desc = 'Write' })
 
--- soのキーコンビネーションで現在開いている.luaのファイルを読み込みます。
+-- <space>soのキーコンビネーションで現在開いている.luaのファイルを読み込みます。
 -- 範囲選択した状態で使うと、選択された範囲のみを読み込みます。
--- oilにキーマップ
-vim.keymap.set({ 'n', 'x' }, 'so', ':source<cr>', { silent = true, desc = 'Source current script' })
+-- 元は"so"だったが、flash.nvimの"s"と前置キーが競合しtimeoutlen分の反応遅延が発生していたため変更
+vim.keymap.set({ 'n', 'x' }, '<space>so', ':source<cr>', { silent = true, desc = 'Source current script' })
 
 -- <space>eで:Exのキーマップ LazyVimとの競合のためオフ
 -- vim.keymap.set('n', '<space>e', '<cmd>Ex<cr>', { silent = true, desc = 'Source current script' })

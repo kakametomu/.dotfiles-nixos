@@ -23,6 +23,9 @@ vim.opt.scrolloff = 3
 -- サインカラムを常に固定して表示させる
 vim.opt.signcolumn = "yes"
 
+-- マップされたキーシーケンスの続きを待つ時間(ms)。デフォルト(1000ms)だとflash.nvimの"s"等の反応が遅く感じるため短縮
+vim.opt.timeoutlen = 300
+
 -- ウィンドウの枠線設定
 vim.opt.winborder = 'rounded'
 -- 以下は、hとlで行の端に到達したとき、行端を越えて次の行へ移動する設定です。
