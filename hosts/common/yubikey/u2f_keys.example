@@ -1,0 +1,15 @@
+# PAM U2F マッピングのサンプル。
+#
+# 実際のファイルには、認証に関する
+# メタデータ（ユーザー名、キーハンドル／認証情報 ID、公開鍵）が含まれているため、意図的に追跡対象外としています。
+#
+# ターゲットマシンで、以下のコマンドを実行して実際のマッピングを生成してください：
+#
+#   pamu2fcfg -u kaka -o pam://dotfiles-nixos > u2f_keys
+#
+# その後、次のようにインストールします：
+#
+#   sudo install -Dm600 -o root -g root u2f_keys /etc/security/u2f_keys
+#
+# フォーマット例：
+# kaka:<keyHandle>,<publicKey>,<coseType>,<options>

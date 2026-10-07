@@ -22,7 +22,7 @@
   security.pam.u2f = {
     enable = true;
     settings = {
-      authfile = ./u2f_keys;
+      authfile = "/etc/security/u2f_keys";
       # ホスト名非依存の固定origin。デフォルト(pam://$HOSTNAME)のままだと
       # main/minipc/vboxでホスト名が異なり同じauthfileが使えなくなる。
       origin = "pam://dotfiles-nixos";

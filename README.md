@@ -34,6 +34,7 @@ NixOS + Home Manager によるシステム設定の管理リポジトリ。
 - [MiniPC (AMD Ryzen 7 8745H + Radeon 780M)](docs/install-minipc.md)
 - [メインPC (Intel i7-2700 + RTX 3060 Ti)](docs/install-main.md)
 - [OBS / Google Meet カメラ構成](docs/obs-google-meet-camera.md)
+- [YubiKey / PAM U2F](docs/yubikey.md)
 
 ---
 
