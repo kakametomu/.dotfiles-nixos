@@ -19,5 +19,6 @@
     foliate
     signal-desktop
     obsidian
+    usbutils
   ];
 }
