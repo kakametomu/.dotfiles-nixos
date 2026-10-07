@@ -7,9 +7,8 @@
 
   networking.hostName = "minipc";
 
-  # FHD Camera (1bcf:28c4) は V4L2 直接アクセスで常に黒フレームを返すハードウェアバグがある。
-  # Chrome/Firefox 等は Camera XDG ポータルを使わず V4L2 デバイスに直接アクセスするため、
-  # PipeWire 経由で正しく読み出した映像を v4l2loopback (/dev/video0) に書き戻してブリッジする。
+  # FHD Camera (1bcf:28c4) をそのまま Chrome/Meet/OBS に見せると黒フレームやFPS誤認が起きる。
+  # MJPEG 30fps を ffmpeg で低遅延変換し、v4l2loopback (/dev/video0) に書き戻してブリッジする。
   # OBS Virtual Camera (video_nr=10) は hosts/common/boot.nix の設定を維持しつつ追加するため、
   # options 行ごと mkForce で上書きする。
   boot.extraModprobeConfig = lib.mkForce ''
@@ -17,14 +16,11 @@
   '';
 
   systemd.user.services.camera-pipewire-bridge = {
-    description = "FHD Camera の映像を PipeWire から v4l2loopback (/dev/video0) へブリッジ(黒フレームバグ回避)";
-    wantedBy = [ "graphical-session.target" ];
-    after = [ "pipewire.service" "wireplumber.service" ];
+    description = "FHD Camera の映像を ffmpeg で v4l2loopback (/dev/video0) へ低遅延ブリッジ";
     serviceConfig = {
-      # target-object は指定しない: USB 抜き差しで PipeWire ノードIDが変わるため、
-      # 指定するとデバイス再接続のたびにブリッジが壊れる
-      ExecStart = "${pkgs.gst_all_1.gstreamer}/bin/gst-launch-1.0 pipewiresrc ! videoconvert ! v4l2sink device=/dev/video0";
-      Environment = "GST_PLUGIN_SYSTEM_PATH_1_0=${pkgs.pipewire}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0:${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0";
+      ExecStartPre = "${pkgs.v4l-utils}/bin/v4l2-ctl -d /dev/video0 -p 30";
+      ExecStart = "${pkgs.ffmpeg}/bin/ffmpeg -hide_banner -loglevel warning -fflags nobuffer -flags low_delay -thread_queue_size 1 -use_wallclock_as_timestamps 1 -f v4l2 -framerate 30 -video_size 1280x720 -input_format mjpeg -i /dev/video2 -an -vf format=yuyv422 -f v4l2 /dev/video0";
+      ExecStartPost = "${pkgs.v4l-utils}/bin/v4l2-ctl -d /dev/video0 -p 30";
       Restart = "on-failure";
       RestartSec = 3;
     };
