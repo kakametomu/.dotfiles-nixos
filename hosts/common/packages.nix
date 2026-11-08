@@ -21,4 +21,8 @@
     obsidian
     usbutils
   ];
+
+  # 汎用Linux向けの動的リンクバイナリを実行できるようにする
+  # （claude-code の公式ネイティブインストーラ等が配布するバイナリ用）
+  programs.nix-ld.enable = true;
 }

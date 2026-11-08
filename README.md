@@ -88,6 +88,20 @@ nixpkgs 未対応のため AppImage を手動配置する:
 2. `~/Applications/UpNote.AppImage` に配置
 3. `upnote` コマンドまたはアプリメニューから起動（ラッパーは home/default.nix で定義）
 
+## claude-code / codex
+
+アップストリームの更新頻度（ほぼ毎日、日によっては複数回）が Nix のビルド/switch
+サイクルに追いつかず、かつ nixpkgs 側パッケージはストアが読み取り専用のため
+ツール本体の自己更新機能を無効化してしまう。そのため Nix 管理から外し、公式の
+セルフアップデート対応ネイティブインストーラで手動管理する:
+
+- claude-code: https://claude.ai/install.sh （`curl -fsSL https://claude.ai/install.sh | bash`）
+- codex: https://chatgpt.com/codex/install.sh （`curl -fsSL https://chatgpt.com/codex/install.sh | sh`）
+
+いずれも `~/.local/bin` にインストールされる想定で、home/default.nix の
+`home.sessionPath` で PATH に追加済み。更新は各ツールの自己更新コマンド
+（`claude update` など）に任せる。
+
 ## 依存関係
 
 - [nixpkgs-unstable](https://github.com/NixOS/nixpkgs/tree/nixpkgs-unstable)
