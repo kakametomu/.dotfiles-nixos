@@ -8,6 +8,7 @@
     ./bash.nix
     ./plasma.nix
     ./fcitx5.nix
+    ./workarounds.nix
   ];
 
   home = rec {
@@ -24,8 +25,6 @@
     zoxide
     tmux
     herdr
-    claude-code
-    codex
     google-chrome
     # UpNote: nixpkgs未対応のため AppImage をラッパーで起動
     # AppImage本体は ~/Applications/UpNote.AppImage に配置すること
@@ -33,6 +32,12 @@
       exec ${pkgs.appimage-run}/bin/appimage-run ${config.home.homeDirectory}/Applications/UpNote.AppImage --ozone-platform=wayland "$@"
     '')
   ];
+
+  # claude-code / codex: アップストリームの更新頻度（ほぼ毎日）が
+  # Nixのビルド/switchサイクルに追いつかず、nixpkgs側も自己更新機能を
+  # 無効化してしまうため、公式インストーラで手動管理する（README参照）。
+  # インストール先の ~/.local/bin を使えるようにPATHへ追加するのみ。
+  home.sessionPath = [ "${config.home.homeDirectory}/.local/bin" ];
 
   # 全シェル共通のエイリアス（fish固有のものはfish.nixで管理）
   home.shellAliases = {
