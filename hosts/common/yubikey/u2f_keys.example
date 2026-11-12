@@ -2,14 +2,21 @@
 #
 # 実際のファイルには、認証に関する
 # メタデータ（ユーザー名、キーハンドル／認証情報 ID、公開鍵）が含まれているため、意図的に追跡対象外としています。
+# 手順の詳細は docs/yubikey.md を参照してください。
 #
-# ターゲットマシンで、以下のコマンドを実行して実際のマッピングを生成してください：
+# ターゲットマシンで、以下のコマンドを実行して実際のマッピングを生成してください。
 #
-#   pamu2fcfg -u kaka -o pam://dotfiles-nixos > u2f_keys
+# メイン（YubiKey Bio。-V で指紋を必須にする）：
+#
+#   pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > u2f_keys
+#
+# バックアップ（タッチ式。差し替えてから追記する。-N で PIN を必須にする）：
+#
+#   pamu2fcfg -n -o pam://dotfiles-nixos -N >> u2f_keys
 #
 # その後、次のようにインストールします：
 #
 #   sudo install -Dm600 -o root -g root u2f_keys /etc/security/u2f_keys
 #
-# フォーマット例：
-# kaka:<keyHandle>,<publicKey>,<coseType>,<options>
+# フォーマット例（1ユーザー1行。鍵が複数ある場合は ":" 区切りで並ぶ）：
+# kaka:<keyHandle1>,<publicKey1>,es256,+presence+verification:<keyHandle2>,<publicKey2>,es256,+presence+pin

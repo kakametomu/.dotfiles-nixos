@@ -113,11 +113,11 @@ YubiKey / PAM U2F を使う場合は、再起動前にマッピングを配置�
 VirtualBox では YubiKey を VM に USB パススルーしてから実行する:
 
 ```bash
-nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos > /tmp/u2f_keys'
+nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > /tmp/u2f_keys'
 install -Dm600 -o root -g root /tmp/u2f_keys /mnt/etc/security/u2f_keys
 ```
 
-詳細は [YubiKey / PAM U2F](yubikey.md) を参照。
+上記は YubiKey Bio (指紋) 用。バックアップキーの追記など、詳細は [YubiKey / PAM U2F](yubikey.md) を参照。
 
 パスワードを設定したら電源を切る:
 
