@@ -1,8 +1,16 @@
 { pkgs, ... }:
 
 {
-  # YubiKeyによる sudo / SDDMログイン / KDE画面ロック解除の2FA、
+  # YubiKeyによる sudo / SDDMログイン / KDE画面ロック解除のパスワードレス認証、
   # および SSH FIDO2常駐鍵認証 (ssh-keygen -t ed25519-sk) のサポート。
+  # 登録・有効化の手順は docs/yubikey.md を参照。
+  #
+  # 想定構成:
+  #   - メイン:       YubiKey Bio    (pamu2fcfg -V で登録 → 指紋が必須)
+  #   - バックアップ: タッチ式YubiKey (pamu2fcfg -N で登録 → PIN + タッチが必須)
+  # 指紋/PINの要否は鍵ごとに authfile 側のフラグ (+verification / +pin) で決める。
+  # ここで userverification = 1 を全体に指定すると、指紋センサーの無い
+  # バックアップキーが無視されるので指定しない。
   #
   # 注意: SDDM自身の "sddm" PAMサービスは useDefaultRules = false で
   # "auth substack login" に処理を委譲しているため (nixos/modules/services/display-managers/sddm.nix)、
@@ -30,9 +38,12 @@
     };
   };
 
+  # "sufficient": 鍵で認証できればパスワード不要。失敗時・鍵が無いときはパスワードにフォールバックする。
+  # パスワードも必須にしたいサービスは "required" にする (鍵が無いと認証できなくなる点に注意)。
+  # ここに無いPAMサービス (su / polkit-1 など) も nixpkgs の既定値で "sufficient" になる。
   security.pam.services = {
-    sudo.u2f.control = "required";
-    login.u2f.control = "required"; # SDDMログインは "auth substack login" 経由でこれが効く
-    kde.u2f.control = "required";   # KDE画面ロック/解除
+    sudo.u2f.control = "sufficient";
+    login.u2f.control = "sufficient"; # SDDMログインは "auth substack login" 経由でこれが効く
+    kde.u2f.control = "sufficient";   # KDE画面ロック/解除
   };
 }
