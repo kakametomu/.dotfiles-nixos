@@ -1,7 +1,7 @@
 # YubiKey / PAM U2F
 
-`hosts/common/yubikey.nix` で YubiKey を使った 2 要素認証 (パスワード + タッチ) を設定する。
-このページは、鍵の登録から有効化、動作確認、SSH 鍵、復旧までの手順をまとめたもの。
+`hosts/common/yubikey.nix` で、YubiKey によるパスワードレス認証を設定する。
+このページは、鍵の登録から有効化、動作確認、SSH 鍵、Bitwarden、復旧までの手順をまとめたもの。
 
 ## 目次
 
@@ -10,51 +10,58 @@
 3. [YubiKey 本体の準備](#yubikey-本体の準備)
 4. [手順 A: 起動済みの環境で有効化する](#手順-a-起動済みの環境で有効化する)
 5. [手順 B: NixOS インストール中に設定する](#手順-b-nixos-インストール中に設定する)
-6. [2 本目 (バックアップキー) を登録する](#2-本目-バックアップキー-を登録する)
+6. [鍵を追加する](#鍵を追加する)
 7. [動作確認](#動作確認)
 8. [SSH で FIDO2 鍵を使う](#ssh-で-fido2-鍵を使う)
-9. [鍵の入れ替え・削除・紛失時](#鍵の入れ替え削除紛失時)
-10. [締め出されたときの復旧](#締め出されたときの復旧)
-11. [トラブルシューティング](#トラブルシューティング)
-12. [pamu2fcfg コマンド解説](#pamu2fcfg-コマンド解説)
+9. [Bitwarden で使う](#bitwarden-で使う)
+10. [鍵の入れ替え・削除・紛失時](#鍵の入れ替え削除紛失時)
+11. [うまく認証できないときの復旧](#うまく認証できないときの復旧)
+12. [トラブルシューティング](#トラブルシューティング)
+13. [pamu2fcfg コマンド解説](#pamu2fcfg-コマンド解説)
 
 ## 概要
+
+想定している鍵の構成:
+
+| 鍵 | 役割 | 認証時に必要なもの | 登録時のオプション |
+| --- | --- | --- | --- |
+| YubiKey Bio | メイン (普段使い) | 指紋 | `-V` |
+| タッチ式 YubiKey | バックアップ | FIDO2 PIN + タッチ | `-N` |
+| (鍵なし) | フォールバック | パスワード | — |
+
+どちらの鍵も「鍵を持っている」+「指紋または PIN」の 2 要素になるため、パスワード入力は省ける。
 
 | 項目 | 内容 |
 | --- | --- |
 | 設定モジュール | `hosts/common/yubikey.nix` |
 | マッピングファイル | `/etc/security/u2f_keys` (リポジトリ管理外) |
 | origin | `pam://dotfiles-nixos` (全ホスト共通の固定値) |
+| PAM の control | `sufficient` (鍵で通ればパスワード不要、通らなければパスワード) |
 | 導入されるコマンド | `ykman`、`pamu2fcfg`、`fido2-token` など |
 
-モジュールを有効にしたときの PAM サービスごとの挙動:
-
-| PAM サービス | 対象 | control | 挙動 |
-| --- | --- | --- | --- |
-| `sudo` | `sudo` | `required` | パスワード + タッチの両方が必要 |
-| `login` | TTY ログイン、SDDM ログイン | `required` | 同上 |
-| `kde` | KDE の画面ロック解除 | `required` | 同上 |
-| 上記以外 (`su`、`polkit-1` など) | | `sufficient` | タッチだけで通る。失敗時はパスワードにフォールバック |
+対象になる認証: `sudo`、TTY ログイン、SDDM ログイン、KDE の画面ロック解除、
+およびそのほかの PAM サービス (`su`、polkit の認証ダイアログなど)。
 
 注意点:
 
 - **現在このモジュールは無効**。`hosts/common/default.nix` で `./yubikey.nix` がコメントアウトされている。
-- `required` のサービスは、`/etc/security/u2f_keys` が無い、または自分の行が無いと
-  **認証に必ず失敗する**。必ず「鍵を登録 → モジュールを有効化」の順で進めること。
-- `security.pam.u2f.enable = true` は全 PAM サービスに U2F を追加し、個別指定の無いサービスは
-  nixpkgs の既定値 `sufficient` になる。つまり `su` や polkit の認証ダイアログは
-  YubiKey のタッチだけで通る。これも 2 要素にしたい場合は、該当サービスに
-  `security.pam.services.<名前>.u2f.control = "required";` を追加する。
+- **指紋 / PIN の要否は鍵ごとに登録時のオプションで決まる**。`-V` も `-N` も付けずに登録した鍵は
+  タッチだけで通ってしまう (拾った人がそのまま `sudo` できる) ので、必ずどちらかを付ける。
+- `yubikey.nix` 側で `userverification = 1` を全体に設定しないこと。指紋センサーの無い
+  バックアップキーが無視されて使えなくなる。
+- **パスワードだけでも通る**。`sufficient` は鍵の認証に失敗するとパスワードにフォールバックする。
+  鍵を無くしても締め出されない代わりに、パスワードの強度は引き続き重要。
+  パスワードも必須にしたい場合は、該当サービスの `control` を `"required"` にする
+  (その場合は鍵が無いと認証できなくなる)。
 - SSH ログインには影響しない (`PasswordAuthentication` / `KbdInteractiveAuthentication` が
   無効で、公開鍵認証は PAM の auth を通らないため)。
 - マッピングファイルにはユーザー名、キーハンドル、公開鍵が含まれるため、公開リポジトリには置かない。
 
 ## 用意するもの
 
-- FIDO2 / U2F 対応の YubiKey。**2 本を強く推奨** (常用 + バックアップ)。
-  1 本だけだと、紛失・故障時に `sudo` もログインもできなくなる。
-- `kaka` ユーザーのパスワード (2 要素のうちの 1 つとして引き続き必要)。
-- 復旧用の NixOS インストール USB (万一の締め出しに備えて手元に置いておく)。
+- YubiKey Bio (メイン) とタッチ式の YubiKey (バックアップ)。
+- それぞれの FIDO2 PIN (このあと設定する)。2 本で同じ PIN にしてもよい。
+- `kaka` ユーザーのパスワード (フォールバックとして引き続き使う)。
 
 ## YubiKey 本体の準備
 
@@ -78,49 +85,60 @@ ykman info
 fido2-token -L
 ```
 
-FIDO2 PIN を設定する。PAM U2F のタッチ認証だけなら必須ではないが、
-SSH の常駐鍵 (resident key) を使う場合は必要になる。
+### FIDO2 PIN を設定する (2 本とも)
+
+Bio は指紋登録の前に PIN が必須。バックアップキーは PIN そのものが認証要素になる。
+鍵を 1 本ずつ挿して実行する。
 
 ```bash
 ykman fido access change-pin
 ```
 
-- PIN を 8 回連続で間違えると FIDO2 機能がロックされ、リセット (全 FIDO 資格情報の消去) が必要になる。
-- `ykman info` が失敗する場合は `pcscd` が動いていない可能性がある
-  ([トラブルシューティング](#トラブルシューティング)を参照)。
+PIN を 8 回連続で間違えると FIDO2 機能がロックされ、リセット (全 FIDO 資格情報の消去) が必要になる。
+
+### 指紋を登録する (Bio のみ)
+
+```bash
+ykman fido fingerprints add right-index
+```
+
+LED の点滅に合わせて、同じ指を数回センサーに当てる。
+読み取りに失敗したときのために、別の指も登録しておくとよい。
+
+```bash
+ykman fido fingerprints add left-index
+```
+
+```bash
+ykman fido fingerprints list
+```
+
+指紋が 3 回連続で一致しないと指紋認証がブロックされ、PIN を使う操作
+(例: `ykman fido fingerprints list`) を行うまで解除されない。
 
 ## 手順 A: 起動済みの環境で有効化する
 
-締め出しを避けるため、順番を守ること。
+### 1. Bio を登録する
 
-### 1. root シェルを開いたままにする
-
-別のターミナルで root シェルを開き、作業が終わるまで閉じない。
-設定を誤っても、このシェルから元に戻せる。
+Bio を挿して実行し、LED が点滅したら登録済みの指を当てる。
 
 ```bash
-sudo -s
+nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > u2f_keys'
 ```
 
-### 2. マッピングを生成する
+### 2. バックアップキーを追記する
 
-YubiKey を挿して実行し、LED が点滅したらタッチする。
+Bio を抜いてバックアップキーを挿し、同じファイルに追記する。`>` ではなく `>>` を使うこと。
+PIN を聞かれたら入力し、LED が点滅したらタッチする。
 
 ```bash
-nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos > u2f_keys'
+nix-shell -p pam_u2f --run 'pamu2fcfg -n -o pam://dotfiles-nixos -N >> u2f_keys'
 ```
 
-### 3. 2 本目を追記する (推奨)
+### 3. 内容を確認して配置する
 
-1 本目を抜いて 2 本目を挿し、同じファイルに追記する。`>` ではなく `>>` を使うこと。
-
-```bash
-nix-shell -p pam_u2f --run 'pamu2fcfg -n -o pam://dotfiles-nixos >> u2f_keys'
-```
-
-### 4. 内容を確認して配置する
-
-`kaka:` で始まる **1 行** になっていることを確認する (鍵が 2 本なら `:` 区切りで 2 つ並ぶ)。
+`kaka:` で始まる **1 行** に、`:` 区切りで鍵が 2 つ並んでいることを確認する。
+1 つ目の末尾に `+verification`、2 つ目の末尾に `+pin` が含まれていれば、オプションが効いている。
 
 ```bash
 cat u2f_keys
@@ -136,7 +154,7 @@ sudo install -Dm600 -o root -g root u2f_keys /etc/security/u2f_keys
 rm u2f_keys
 ```
 
-### 5. モジュールを有効にする
+### 4. モジュールを有効にする
 
 `hosts/common/default.nix` のコメントアウトを外す。
 
@@ -144,7 +162,7 @@ rm u2f_keys
     ./yubikey.nix
 ```
 
-### 6. まず `test` で反映する
+### 5. まず `test` で反映する
 
 `nixos-rebuild test` は現在の起動中だけ反映し、ブートエントリには登録しない。
 問題があっても再起動すれば元の設定に戻る。
@@ -153,32 +171,31 @@ rm u2f_keys
 sudo nixos-rebuild test --flake .#minipc
 ```
 
-### 7. 動作確認する
+### 6. 動作確認する
 
-**新しいターミナル**で[動作確認](#動作確認)の項目を試す。手順 1 の root シェルはまだ閉じない。
+**新しいターミナル**で[動作確認](#動作確認)の項目を試す。
 
-### 8. 問題なければ `switch` で確定する
+### 7. 問題なければ `switch` で確定する
 
 ```bash
 sudo nixos-rebuild switch --flake .#minipc
 ```
 
-うまくいかなかった場合は、手順 1 の root シェルで `./yubikey.nix` を再びコメントアウトして
-`nixos-rebuild switch` するか、そのまま再起動する。
-
 ## 手順 B: NixOS インストール中に設定する
 
 `nixos-install` の完了後、再起動する前にライブ環境でマッピングを生成し、
-インストール先 (`/mnt`) に配置する。
+インストール先 (`/mnt`) に配置する。PIN 設定と指紋登録が済んでいる鍵を使うこと。
+
+Bio を挿して:
 
 ```bash
-nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos > /tmp/u2f_keys'
+nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > /tmp/u2f_keys'
 ```
 
-2 本目がある場合は差し替えて追記する。
+バックアップキーに差し替えて:
 
 ```bash
-nix-shell -p pam_u2f --run 'pamu2fcfg -n -o pam://dotfiles-nixos >> /tmp/u2f_keys'
+nix-shell -p pam_u2f --run 'pamu2fcfg -n -o pam://dotfiles-nixos -N >> /tmp/u2f_keys'
 ```
 
 ```bash
@@ -186,21 +203,30 @@ install -Dm600 -o root -g root /tmp/u2f_keys /mnt/etc/security/u2f_keys
 ```
 
 - VirtualBox では、先に YubiKey を VM へ USB パススルーしておく。
-- モジュールが無効のままインストールする場合、この手順は後回しにして手順 A で設定してもよい。
+- マッピングが無くてもパスワードでログインできるので、この手順は後回しにして
+  手順 A で設定してもよい。
 
-## 2 本目 (バックアップキー) を登録する
+## 鍵を追加する
 
 すでに `/etc/security/u2f_keys` がある環境に鍵を追加する場合。追加したい YubiKey を挿して実行する。
 
+指紋で認証する鍵 (Bio):
+
 ```bash
-pamu2fcfg -n -o pam://dotfiles-nixos | sudo tee -a /etc/security/u2f_keys > /dev/null
+pamu2fcfg -n -o pam://dotfiles-nixos -V | sudo tee -a /etc/security/u2f_keys > /dev/null
+```
+
+PIN + タッチで認証する鍵:
+
+```bash
+pamu2fcfg -n -o pam://dotfiles-nixos -N | sudo tee -a /etc/security/u2f_keys > /dev/null
 ```
 
 - `-n` はユーザー名を付けず `:<keyHandle>,<publicKey>,...` の形で出力する。
   `pamu2fcfg` の出力は末尾に改行が無いため、追記すると既存の `kaka:...` 行の後ろにつながる。
-- `-o pam://dotfiles-nixos` を 1 本目と同じにすること。省略するとホスト名ベースの origin で
+- `-o pam://dotfiles-nixos` をほかの鍵と同じにすること。省略するとホスト名ベースの origin で
   登録され、その鍵では認証できない。
-- `tee -a` (追記) を使う。`tee` だけだと上書きして 1 本目が消える。
+- `tee -a` (追記) を使う。`tee` だけだと上書きして既存の鍵が消える。
 
 追記後に 1 行になっているか確認し、**追加した鍵だけを挿した状態で**動作確認する。
 
@@ -216,22 +242,22 @@ kaka:<keyHandle1>,<publicKey1>,<coseType>,<options>:<keyHandle2>,<publicKey2>,<c
 
 ## 動作確認
 
-各項目で「パスワード入力 → `Please touch the FIDO authenticator.` の表示 → タッチ」の流れになる
-(順番は前後することがある)。
-
 | 確認項目 | 方法 | 期待する結果 |
 | --- | --- | --- |
-| sudo | `sudo -k && sudo true` | パスワードとタッチの両方を求められる |
-| sudo (鍵なし) | YubiKey を抜いて `sudo -k && sudo true` | 失敗する |
-| 画面ロック | `Meta + L` でロックして解除 | パスワードとタッチで解除できる |
-| TTY ログイン | `Ctrl + Alt + F3` でログイン | パスワードとタッチでログインできる |
-| SDDM ログイン | ログアウトして再ログイン | パスワードとタッチでログインできる |
-| バックアップキー | 2 本目だけ挿して `sudo -k && sudo true` | 成功する |
+| sudo (Bio) | Bio を挿して `sudo -k && sudo true` | 指紋だけで通る。パスワードは聞かれない |
+| sudo (Bio、未登録の指) | 登録していない指を当てる | 鍵では通らず、パスワードを聞かれる |
+| sudo (バックアップ) | バックアップキーだけ挿して `sudo -k && sudo true` | PIN 入力 + タッチで通る |
+| sudo (鍵なし) | 鍵を抜いて `sudo -k && sudo true` | パスワードを聞かれ、パスワードで通る |
+| 画面ロック | `Meta + L` でロックして解除 | 鍵で解除できる |
+| TTY ログイン | `Ctrl + Alt + F3` でログイン | ユーザー名入力後、鍵でログインできる |
+| SDDM ログイン | ログアウトして再ログイン | 鍵でログインできる |
 
-`sudo -k` は sudo の認証キャッシュを破棄する。付けないとキャッシュで通ってしまい確認にならない。
-
-画面ロックの確認は、TTY ログインができることを確かめてから行うと安全
-(解除できなくなった場合の対処は[締め出されたときの復旧](#締め出されたときの復旧)を参照)。
+- `sudo -k` は sudo の認証キャッシュを破棄する。付けないとキャッシュで通ってしまい確認にならない。
+- 「未登録の指」の確認は重要。これで通ってしまう場合は `-V` が効いていないので登録し直す。
+  指紋を 3 回間違えるとブロックされるので、試すのは 1 回にしておく。
+- SDDM と画面ロックはパスワード欄が先に表示される。パスワード欄を空のまま Enter を押すと
+  鍵の認証に進む想定だが、実機での挙動は未確認。
+- 鍵を挿したままパスワードで認証したいときは、鍵を抜くか、鍵の認証が失敗するのを待つ。
 
 ## SSH で FIDO2 鍵を使う
 
@@ -241,19 +267,20 @@ kaka:<keyHandle1>,<publicKey1>,<coseType>,<options>:<keyHandle2>,<publicKey2>,<c
 ### 鍵を作る
 
 ```bash
-ssh-keygen -t ed25519-sk -O resident -O verify-required -O application=ssh:kaka -C "kaka@yubikey-1"
+ssh-keygen -t ed25519-sk -O resident -O verify-required -O application=ssh:kaka -C "kaka@yubikey-bio"
 ```
 
 | オプション | 意味 |
 | --- | --- |
 | `-t ed25519-sk` | FIDO2 セキュリティキーを使う Ed25519 鍵 |
 | `-O resident` | 鍵ハンドルを YubiKey 内にも保存する (常駐鍵)。別の PC でも取り出せる。FIDO2 PIN が必要 |
-| `-O verify-required` | 使用のたびに PIN + タッチを要求する (サーバー側 OpenSSH 8.3 以降) |
+| `-O verify-required` | 使用のたびに本人確認 (Bio は指紋、タッチ式は PIN + タッチ) を要求する。サーバー側 OpenSSH 8.3 以降 |
 | `-O application=ssh:kaka` | YubiKey 内での識別名。`ssh:` で始める必要がある |
 | `-C` | コメント。どの YubiKey の鍵か分かる名前にしておく |
 
 `~/.ssh/id_ed25519_sk` と `~/.ssh/id_ed25519_sk.pub` ができる。
-バックアップキーでも同じ手順で別の鍵を作り、両方の公開鍵を接続先に登録しておく。
+バックアップキーでも同じ手順で別の鍵を作り (`-f ~/.ssh/id_ed25519_sk_backup` などで別名にする)、
+両方の公開鍵を接続先に登録しておく。
 
 ### 公開鍵を登録する
 
@@ -279,22 +306,69 @@ ykman fido credentials list
 ykman fido credentials delete <credential-id>
 ```
 
+## Bitwarden で使う
+
+Bitwarden には YubiKey を使う場面が 3 つある。以下は公式ヘルプなどの調査結果で、実機では未確認。
+
+| 用途 | マスターパスワード | 対応クライアント |
+| --- | --- | --- |
+| 2 段階ログイン (FIDO2 WebAuthn) | 必要 (パスワード + 鍵) | Web、ブラウザ拡張、デスクトップ、モバイル |
+| パスキーでログイン | PRF 対応なら不要 | Web、Chromium 系ブラウザの拡張 |
+| デスクトップアプリのロック解除 | 不要 (ログイン済みの保管庫の解除のみ) | デスクトップ (polkit 経由) |
+
+### 2 段階ログイン
+
+1. Web 保管庫の「設定 → セキュリティ → 2 段階ログイン」を開く。
+2. 「パスキー (FIDO2 WebAuthn)」の「管理」から Bio を登録する。
+3. 同じ画面でバックアップキーも登録する。
+4. **リカバリーコードを控える**。鍵をすべて無くしたときに 2 段階ログインを解除する唯一の手段。
+
+無料プランでも利用でき、鍵は 5 本まで (Premium は 10 本まで) 登録できる。
+
+### パスキーでログイン
+
+Web 保管庫の「設定 → セキュリティ → マスターパスワード」付近にある「パスキーでログイン」から登録する。
+
+- ブラウザと鍵の両方が PRF に対応していれば「保管庫の暗号化に使用」を有効にでき、
+  マスターパスワードなしで復号までできる。非対応の場合はログイン後にマスターパスワードが必要。
+- Chromium 系ブラウザ (Chrome、Brave、Vivaldi、Chromium) を使う。
+- YubiKey 5 は PRF 対応と明記されているが、Bio の PRF 対応は未確認。
+  登録時に「保管庫の暗号化に使用」を選べるかで判断する。
+
+### デスクトップアプリのロック解除
+
+Linux 版デスクトップアプリの「システム認証でロック解除」は polkit を使い、polkit は PAM に委譲する。
+`yubikey.nix` を有効にすると polkit の認証も YubiKey で通るため、Bitwarden の解除にも使える見込み。
+
+- このリポジトリは Flatpak 版 (`com.bitwarden.desktop`) を使っている。Flatpak 版は
+  polkit ポリシーの手動インストールが必要で、NixOS での導入方法は未調査。
+- Flatpak 版でブラウザ拡張の解除まで連携できるかは、情報源によって食い違っている。
+
 ## 鍵の入れ替え・削除・紛失時
 
 `/etc/security/u2f_keys` は 1 ユーザー 1 行で、鍵は `:` 区切りで並んでいる。
 
-- **追加**: [2 本目を登録する](#2-本目-バックアップキー-を登録する)の手順で追記する。
+- **追加**: [鍵を追加する](#鍵を追加する)の手順で追記する。
 - **削除**: `sudoedit /etc/security/u2f_keys` で該当する `:<keyHandle>,<publicKey>,...` の
-  ブロックを消す。どのブロックがどの鍵か分からない場合は、残したい鍵だけで作り直すほうが確実。
-- **作り直し**: 手順 A の 2〜4 をやり直して上書きする。
-- **紛失した場合**: バックアップキーでログインし、紛失した鍵のブロックを削除する。
-  あわせて SSH の `authorized_keys` や GitHub などの Web サービスからも紛失した鍵を外す。
+  ブロックを消す。末尾が `+verification` のものが Bio、`+pin` のものがバックアップキー。
+- **作り直し**: 手順 A の 1〜3 をやり直して上書きする。
+- **紛失した場合**: 残った鍵かパスワードでログインし、紛失した鍵のブロックを削除する。
+  あわせて SSH の `authorized_keys`、GitHub、Bitwarden などからも紛失した鍵を外す。
 
-編集中は root シェルを別に開いておき、保存後に `sudo -k && sudo true` で確認する。
+## うまく認証できないときの復旧
 
-## 締め出されたときの復旧
+`sufficient` 構成なので、鍵で通らなくても**パスワードで認証できる**。
+まず鍵を抜いてパスワードで入り、原因を調べる。
 
-### 画面ロックだけ解除できない
+### Bio の指紋がブロックされた
+
+3 回連続で一致しないとブロックされる。PIN を使う操作を行うと解除される。
+
+```bash
+ykman fido fingerprints list
+```
+
+### 画面ロックを解除できない
 
 `Ctrl + Alt + F3` で TTY に切り替えてログインし、セッションのロックを解除する。
 
@@ -306,37 +380,21 @@ loginctl list-sessions
 loginctl unlock-session <セッション ID>
 ```
 
-### sudo / ログインができない (以前の世代に戻す)
+### 設定変更後にログインできなくなった
 
-モジュールを有効にする前の世代が残っていれば、それで起動するのが最も簡単。
+1. 再起動し、ブートメニューで変更前の世代を選んで起動する。
+2. `./yubikey.nix` をコメントアウトして `sudo nixos-rebuild switch --flake .#<ホスト名>` する。
 
-1. 再起動し、ブートメニューで YubiKey を有効にする前の世代を選ぶ。
-2. 起動したら `/etc/security/u2f_keys` を修正するか、`./yubikey.nix` をコメントアウトして
-   `sudo nixos-rebuild switch --flake .#<ホスト名>` する。
+以前の世代も使えない場合は、NixOS インストール USB で起動してルートを `/mnt` にマウントし
+(手順は各ホストの `docs/install-*.md` を参照)、リポジトリ側でモジュールを無効にして再インストールする。
 
-### 以前の世代が無い (ライブ USB から直す)
-
-1. NixOS インストール USB で起動し、インストール時と同じようにルートを `/mnt` にマウントする
-   (手順は各ホストの `docs/install-*.md` を参照)。
-2. 手元に登録済みの YubiKey がある場合は、マッピングを作り直して配置する。
-
-   ```bash
-   nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos > /tmp/u2f_keys'
-   ```
-
-   ```bash
-   install -Dm600 -o root -g root /tmp/u2f_keys /mnt/etc/security/u2f_keys
-   ```
-
-3. YubiKey が無い場合は、リポジトリ側で `./yubikey.nix` をコメントアウトして再インストールする。
-
-   ```bash
-   nixos-install --flake /mnt/home/kaka/dotfiles-nixos#<ホスト名> --root /mnt
-   ```
+```bash
+nixos-install --flake /mnt/home/kaka/dotfiles-nixos#<ホスト名> --root /mnt
+```
 
 ## トラブルシューティング
 
-### タッチを求められずに失敗する
+### 鍵を挿しているのにパスワードを聞かれる
 
 - `/etc/security/u2f_keys` が存在し、`kaka:` で始まる行があるか確認する。
 
@@ -347,6 +405,7 @@ loginctl unlock-session <セッション ID>
 - 行が途中で改行されていないか確認する (1 ユーザー 1 行)。
 - 登録時の origin が `pam://dotfiles-nixos` だったか確認する。`-o` を付け忘れた鍵は使えないので登録し直す。
 - YubiKey が認識されているか `fido2-token -L` で確認する。
+- Bio の場合、指紋がブロックされていないか確認する (上記の復旧手順を参照)。
 
 ### 原因が分からない
 
@@ -357,10 +416,10 @@ loginctl unlock-session <セッション ID>
 journalctl -b | grep -i u2f
 ```
 
-### 画面ロックだけ解除できない
+### 画面ロックだけ鍵で解除できない
 
 KDE の画面ロックはユーザー権限で PAM を実行するため、root 所有・`600` のマッピングファイルを
-読めずに失敗する可能性がある。その場合は読み取り権限を付ける
+読めずに鍵の認証が失敗する可能性がある。その場合は読み取り権限を付ける
 (ファイルの中身はキーハンドルと公開鍵で、秘密鍵は含まれない)。
 
 ```bash
@@ -390,11 +449,11 @@ VM のメニュー「デバイス → USB」で YubiKey にチェックを入れ
 
 ## pamu2fcfg コマンド解説
 
-YubiKey などの FIDO2 / U2F 対応セキュリティキーを、ログインや `sudo` の 2 要素認証に使うための
+YubiKey などの FIDO2 / U2F 対応セキュリティキーを PAM の認証に使うための
 マッピング行を生成するコマンド。
 
 ```bash
-pamu2fcfg -u kaka -o pam://dotfiles-nixos > u2f_keys
+pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > u2f_keys
 ```
 
 - `pamu2fcfg`
@@ -406,6 +465,8 @@ pamu2fcfg -u kaka -o pam://dotfiles-nixos > u2f_keys
   - 省略すると `pam://<現在のホスト名>` になる。ホスト名が変わると認証できなくなり、
     `main` / `minipc` / `vbox` で同じファイルを使い回すこともできない。
     `yubikey.nix` の `origin` と必ず一致させる。
+- `-V`
+  - 認証時にユーザー検証 (Bio の指紋) を必須にする。出力の末尾に `+verification` が付く。
 - `> u2f_keys`
   - 出力をカレントディレクトリの `u2f_keys` に保存 (上書き) する。
 
@@ -414,8 +475,8 @@ pamu2fcfg -u kaka -o pam://dotfiles-nixos > u2f_keys
 | オプション | 意味 |
 | --- | --- |
 | `-n`, `--nouser` | ユーザー名を付けずに出力する。既存の行へ鍵を追記するときに使う |
-| `-N`, `--pin-verification` | 認証時に FIDO2 PIN も要求する鍵として登録する |
-| `-V`, `--user-verification` | 認証時にユーザー検証 (PIN や生体認証) を要求する |
+| `-N`, `--pin-verification` | 認証時に FIDO2 PIN を必須にする。指紋センサーの無い鍵で使う |
+| `-V`, `--user-verification` | 認証時にユーザー検証 (指紋など) を必須にする |
 | `-P`, `--no-user-presence` | タッチ不要の鍵として登録する (非推奨) |
 | `-r`, `--resident` | 常駐鍵として登録する |
 
