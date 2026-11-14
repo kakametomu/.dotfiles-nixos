@@ -18,7 +18,7 @@
 11. [うまく認証できないときの復旧](#うまく認証できないときの復旧)
 12. [最初からやり直す](#最初からやり直す)
 13. [トラブルシューティング](#トラブルシューティング)
-14. [pamu2fcfg コマンド解説](#pamu2fcfg-コマンド解説)
+14. [コマンド解説](#コマンド解説)
 
 ## 概要
 
@@ -560,7 +560,111 @@ sudo systemctl restart pcscd
 VM のメニュー「デバイス → USB」で YubiKey にチェックを入れてパススルーする。
 ホスト側ユーザーが `vboxusers` グループに入っている必要がある。
 
-## pamu2fcfg コマンド解説
+## コマンド解説
+
+このページに出てくるコマンドを、道具ごとにまとめて解説する。
+
+### nix-shell (一時的にコマンドを使う)
+
+```bash
+nix-shell -p yubikey-manager libfido2 pam_u2f
+```
+
+- `nix-shell -p <パッケージ...>`
+  - 指定したパッケージが使えるシェルを一時的に起動する。システムにはインストールされず、
+    `exit` で抜けると元に戻る。`yubikey.nix` を有効にする前でもコマンドを使うために利用する。
+- `yubikey-manager` は `ykman`、`libfido2` は `fido2-token`、`pam_u2f` は `pamu2fcfg` を含む。
+
+```bash
+nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > u2f_keys'
+```
+
+- `--run '<コマンド>'`
+  - シェルを起動せず、その環境でコマンドを 1 つだけ実行して終了する。
+  - `>` や `>>` も引用符の中に入れているので、リダイレクトまで含めて実行される。
+
+### YubiKey の確認 (lsusb / ykman info / fido2-token)
+
+```bash
+lsusb | grep -i yubi
+```
+
+- `lsusb` は接続中の USB 機器を一覧表示する。
+- `| grep -i yubi` で、大文字小文字を区別せず `yubi` を含む行だけに絞る。
+  何も表示されなければ、OS が YubiKey を認識していない。
+
+```bash
+ykman info
+```
+
+- YubiKey の機種、ファームウェアのバージョン、シリアル番号、有効な機能 (FIDO2、U2F など) を表示する。
+
+```bash
+ykman fido info
+```
+
+- FIDO 機能の状態を表示する。PIN が設定済みか、PIN の残り試行回数、指紋の登録状況などが分かる。
+
+```bash
+fido2-token -L
+```
+
+- 接続中の FIDO2 デバイスを一覧表示する (`-L` は list)。
+  `/dev/hidraw*` のパスと機種名が出れば、FIDO2 デバイスとしてアクセスできている。
+
+### PIN と指紋の管理 (ykman fido)
+
+```bash
+ykman fido access change-pin
+```
+
+- FIDO2 PIN を設定または変更する。未設定なら新しい PIN を、設定済みなら現在の PIN と新しい PIN を聞かれる。
+- PIN は YubiKey 本体に保存され、PC 側には残らない。
+
+```bash
+ykman fido fingerprints add right-index
+```
+
+- Bio に指紋を登録する。`right-index` は自分で付ける名前で、どの指か分かるものにする。
+- PIN を入力したあと、同じ指を数回センサーに当てて読み取らせる。
+
+```bash
+ykman fido fingerprints list
+```
+
+- 登録済みの指紋を、ID と名前の一覧で表示する。PIN の入力が必要。
+- PIN を使う操作なので、指紋認証のブロックを解除する目的でも使える。
+
+```bash
+ykman fido fingerprints delete <ID>
+```
+
+- 指定した指紋を削除する。`<ID>` は `list` で表示されたものを指定する。
+
+### YubiKey 内の資格情報の管理 (ykman fido)
+
+```bash
+ykman fido credentials list
+```
+
+- YubiKey 内に保存されている常駐鍵 (パスキー、SSH の常駐鍵など) を一覧表示する。PIN の入力が必要。
+- `pamu2fcfg` で登録した PAM 用の資格情報は常駐鍵ではないため、ここには表示されない。
+
+```bash
+ykman fido credentials delete <credential-id>
+```
+
+- 指定した常駐鍵を YubiKey から削除する。`<credential-id>` は `list` で表示されたものを指定する。
+
+```bash
+ykman fido reset
+```
+
+- FIDO 機能を工場出荷状態に戻す。PIN、指紋、すべての資格情報が消え、取り消せない。
+- 誤操作防止のため、実行後に鍵を抜き差しし、数秒以内にタッチする必要がある。
+- 詳細は[最初からやり直す](#最初からやり直す)を参照。
+
+### マッピングの生成 (pamu2fcfg)
 
 YubiKey などの FIDO2 / U2F 対応セキュリティキーを PAM の認証に使うための
 マッピング行を生成するコマンド。
@@ -583,10 +687,34 @@ pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > u2f_keys
 - `> u2f_keys`
   - 出力をカレントディレクトリの `u2f_keys` に保存 (上書き) する。
 
-そのほかのオプション:
+```bash
+pamu2fcfg -n -o pam://dotfiles-nixos -N >> u2f_keys
+```
+
+- `-n`
+  - ユーザー名を付けず、`:<keyHandle>,<publicKey>,...` の形で出力する。既存の行の後ろにつなげるために使う。
+- `-N`
+  - 認証時に FIDO2 PIN を必須にする。出力の末尾に `+pin` が付く。指紋センサーの無い鍵で使う。
+- `>> u2f_keys`
+  - 出力をファイルの末尾に追記する。`>` にすると上書きされ、先に登録した鍵が消える。
+
+```bash
+pamu2fcfg -n -o pam://dotfiles-nixos -N | sudo tee -a /etc/security/u2f_keys > /dev/null
+```
+
+- `| sudo tee -a <ファイル>`
+  - `pamu2fcfg` の出力を root 権限でファイルに追記する (`-a` は append)。
+  - `sudo pamu2fcfg ... >> /etc/security/u2f_keys` と書くと、リダイレクトは一般ユーザーの権限で
+    行われるため失敗する。そのため `tee` を `sudo` で実行する。
+- `> /dev/null`
+  - `tee` は受け取った内容を画面にも出力するので、それを捨てる。
+
+オプション一覧:
 
 | オプション | 意味 |
 | --- | --- |
+| `-u`, `--username` | 行の先頭に付けるユーザー名 |
+| `-o`, `--origin` | origin (識別子)。PAM 側の設定と一致させる |
 | `-n`, `--nouser` | ユーザー名を付けずに出力する。既存の行へ鍵を追記するときに使う |
 | `-N`, `--pin-verification` | 認証時に FIDO2 PIN を必須にする。指紋センサーの無い鍵で使う |
 | `-V`, `--user-verification` | 認証時にユーザー検証 (指紋など) を必須にする |
@@ -594,3 +722,146 @@ pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > u2f_keys
 | `-r`, `--resident` | 常駐鍵として登録する |
 
 期待される形式のサンプルは `hosts/common/yubikey/u2f_keys.example` を参照。
+
+### マッピングファイルの配置と確認 (install / cat / rm / chmod)
+
+```bash
+sudo install -Dm600 -o root -g root u2f_keys /etc/security/u2f_keys
+```
+
+- `install` は、コピーと同時に権限と所有者を設定するコマンド。
+- `-D`
+  - コピー先のディレクトリ (`/etc/security`) が無ければ作成する。
+- `-m600`
+  - 権限を `600` (所有者だけが読み書きできる) にする。
+- `-o root -g root`
+  - 所有者とグループを `root` にする。
+- インストール中の手順ではコピー先が `/mnt/etc/security/u2f_keys` になる。
+  ライブ環境ではすでに root なので `sudo` は付けない。
+
+```bash
+cat u2f_keys
+```
+
+```bash
+sudo cat /etc/security/u2f_keys
+```
+
+- ファイルの内容を表示する。配置後のファイルは root しか読めないので `sudo` が必要。
+
+```bash
+rm u2f_keys
+```
+
+```bash
+sudo rm /etc/security/u2f_keys
+```
+
+- ファイルを削除する。前者は作業用のファイル、後者は配置済みのマッピングファイルを消す。
+  後者を消すと鍵では認証できなくなり、パスワードだけになる。
+
+```bash
+sudo chmod 644 /etc/security/u2f_keys
+```
+
+- 権限を `644` (所有者は読み書き、ほかのユーザーは読み取りのみ) に変える。
+  ユーザー権限で動く画面ロックからファイルを読めるようにするために使う。
+
+### 認証の確認 (sudo)
+
+```bash
+sudo -k && sudo true
+```
+
+- `sudo -k`
+  - sudo の認証キャッシュを破棄する。直前に `sudo` を使っていても、次回は必ず認証を求められる。
+- `&&`
+  - 前のコマンドが成功したら次のコマンドを実行する。
+- `sudo true`
+  - 何もしないコマンド `true` を root 権限で実行する。認証が通るかどうかだけを確かめられる。
+
+`sudoedit /etc/security/u2f_keys` は、root 権限が必要なファイルを自分のエディタで安全に編集するコマンド。
+一時コピーを編集し、保存時に元のファイルへ書き戻す。
+
+### 設定の反映 (nixos-rebuild / nixos-install)
+
+```bash
+sudo nixos-rebuild test --flake .#minipc
+```
+
+- `test`
+  - 設定をビルドして現在のシステムに反映するが、ブートエントリには登録しない。
+    再起動すると反映前の設定に戻るので、試すのに向いている。
+- `--flake .#minipc`
+  - カレントディレクトリの flake にある `minipc` の構成を使う。ホストに合わせて `vbox` などに読み替える。
+
+```bash
+sudo nixos-rebuild switch --flake .#minipc
+```
+
+- `switch`
+  - 設定を反映し、次回以降の起動でも使われるようにブートエントリに登録する。
+
+```bash
+nixos-install --flake /mnt/home/kaka/dotfiles-nixos#<ホスト名> --root /mnt
+```
+
+- ライブ USB から、`/mnt` にマウントしたシステムへ NixOS をインストール (または再インストール) する。
+- `--root /mnt`
+  - インストール先のルートディレクトリを指定する。
+
+### SSH 鍵 (ssh-keygen)
+
+```bash
+ssh-keygen -t ed25519-sk -O resident -O verify-required -O application=ssh:kaka -C "kaka@yubikey-bio"
+```
+
+- YubiKey を使う SSH 鍵を作成する。各オプションの意味は
+  [SSH で FIDO2 鍵を使う](#ssh-で-fido2-鍵を使う)の表を参照。
+
+```bash
+cd ~/.ssh && ssh-keygen -K
+```
+
+- `cd ~/.ssh`
+  - 鍵ファイルの置き場所に移動する。`ssh-keygen -K` はカレントディレクトリに書き出すため。
+- `ssh-keygen -K`
+  - YubiKey 内の常駐鍵を読み出し、`id_ed25519_sk_rk_*` という鍵ファイルとして保存する。PIN の入力が必要。
+
+### セッションの操作 (loginctl)
+
+```bash
+loginctl list-sessions
+```
+
+- ログイン中のセッションを一覧表示する。左端の番号がセッション ID。
+  ロックされたデスクトップのセッションは、`seat0` に属しているものを探す。
+
+```bash
+loginctl unlock-session <セッション ID>
+```
+
+- 指定したセッションの画面ロックを解除する。TTY からデスクトップのロックを外すときに使う。
+
+### ログとサービス (journalctl / systemctl)
+
+```bash
+journalctl -b | grep -i u2f
+```
+
+- `journalctl -b`
+  - 今回の起動以降のシステムログを表示する。
+- `| grep -i u2f`
+  - `u2f` を含む行だけに絞る。`debug = true;` を設定していると、`pam_u2f` の詳細なログが出る。
+
+```bash
+systemctl status pcscd.socket
+```
+
+- `pcscd` (スマートカード用のサービス) の待ち受け状態を表示する。`ykman` の一部の機能が利用する。
+
+```bash
+sudo systemctl restart pcscd
+```
+
+- `pcscd` を再起動する。`ykman` が YubiKey を見つけられないときに試す。
