@@ -116,14 +116,34 @@ nixos-install --flake .#main --root /mnt
 nixos-enter --root /mnt -c 'passwd kaka'
 ```
 
-YubiKey / PAM U2F を使う場合は、再起動前にマッピングを配置する:
+**必須: 再起動前に YubiKey のマッピングを配置する。**
+このホストはログインにパスワード + YubiKey が必要な設定 (`hosts/common/yubikey.nix`) なので、
+`/mnt/etc/security/u2f_keys` が無いまま再起動すると、SDDM からも TTY からもログインできない。
+
+YubiKey Bio (指紋) を挿して:
 
 ```bash
 nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > /tmp/u2f_keys'
+```
+
+バックアップキー (PIN + タッチ) に差し替えて、同じファイルに追記する (`>>` を使う):
+
+```bash
+nix-shell -p pam_u2f --run 'pamu2fcfg -n -o pam://dotfiles-nixos -N >> /tmp/u2f_keys'
+```
+
+配置して、`kaka:` で始まる 1 行に鍵が 2 つ並んでいることを確認する:
+
+```bash
 install -Dm600 -o root -g root /tmp/u2f_keys /mnt/etc/security/u2f_keys
 ```
 
-上記は YubiKey Bio (指紋) 用。バックアップキーの追記など、詳細は [YubiKey / PAM U2F](yubikey.md) を参照。
+```bash
+cat /mnt/etc/security/u2f_keys
+```
+
+鍵の PIN 設定・指紋登録がまだの場合や、詳しい説明は [YubiKey / PAM U2F](yubikey.md) の
+「YubiKey 本体の準備」と「手順 B」を参照。
 
 パスワードを設定したら電源を切る:
 

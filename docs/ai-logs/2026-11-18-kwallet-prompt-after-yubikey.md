@@ -85,10 +85,22 @@ YubiKey 導入前は 1 が無く、パスワードが常に 3 まで届いてい
 
 ## 今後の作業
 
-1. `login.u2f.control` を `required` にする(main / minipc)。
-2. vbox では YubiKey の設定(`yubikey.nix`)を読み込まないようにする。
-3. `docs/yubikey.md` に今回の構成(ログインはパスワード + 鍵、sudo と画面ロックは鍵のみ)を反映する。
-4. `docs/install-main.md` と `docs/install-minipc.md` に、初回起動前の `u2f_keys` 配置を必須ステップとして明記する。
+1. [x] `login.u2f.control` を `required` にする(main / minipc)。
+2. [x] vbox では YubiKey の設定(`yubikey.nix`)を読み込まないようにする。
+   `hosts/common/default.nix` から外し、`hosts/main/default.nix` と `hosts/minipc/default.nix` で読み込む形にした。
+3. [x] `docs/yubikey.md` に今回の構成(ログインはパスワード + 鍵、sudo と画面ロックは鍵のみ)を反映する。
+4. [x] `docs/install-main.md` と `docs/install-minipc.md` に、初回起動前の `u2f_keys` 配置を必須ステップとして明記する。
+   `docs/install-vbox.md` からは YubiKey の手順を削除した。
+5. [ ] 実機(minipc)で下記の確認手順を行う。
+
+### 評価結果(実機適用前)
+
+`nix eval` で生成される PAM 設定を確認した。
+
+- minipc の `login`: `pam_u2f` が `required` になり、その後ろに `pam_unix`(unix-early)→ `pam_kwallet5` → `pam_unix` が続く。
+- minipc の `sudo` / `kde`: `pam_u2f` は `sufficient` のまま。
+- minipc の `sddm`: `auth substack login` のまま(上記の `login` が効く)。
+- vbox: `login` / `sudo` / `kde` のいずれにも `pam_u2f` が無い。
 
 ### 適用時の確認手順
 

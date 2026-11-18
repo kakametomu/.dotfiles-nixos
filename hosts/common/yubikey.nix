@@ -1,9 +1,16 @@
 { pkgs, ... }:
 
 {
-  # YubiKeyによる sudo / SDDMログイン / KDE画面ロック解除のパスワードレス認証、
-  # および SSH FIDO2常駐鍵認証 (ssh-keygen -t ed25519-sk) のサポート。
+  # YubiKeyによる認証、および SSH FIDO2常駐鍵認証 (ssh-keygen -t ed25519-sk) のサポート。
+  #   - SDDM / TTY ログイン: パスワード + 鍵 の両方が必須 (required)
+  #   - sudo / KDE画面ロック解除 / polkit など: 鍵だけで通る (sufficient)
   # 登録・有効化の手順は docs/yubikey.md を参照。
+  #
+  # hosts/common/default.nix からは読み込まず、使うホスト (main / minipc) の default.nix で読み込む。
+  # vbox は検証用のため読み込まない。
+  #
+  # 重要: /etc/security/u2f_keys が無いとログインできない (TTY含む)。
+  # 新規インストール時は再起動前に必ず配置すること (docs/install-*.md)。
   #
   # 想定構成:
   #   - メイン:       YubiKey Bio    (pamu2fcfg -V で登録 → 指紋が必須)
@@ -39,11 +46,15 @@
   };
 
   # "sufficient": 鍵で認証できればパスワード不要。失敗時・鍵が無いときはパスワードにフォールバックする。
-  # パスワードも必須にしたいサービスは "required" にする (鍵が無いと認証できなくなる点に注意)。
+  # "required":   鍵の認証に成功しても打ち切らず、続けてパスワードも要求する。鍵が無いと認証できない。
   # ここに無いPAMサービス (su / polkit-1 など) も nixpkgs の既定値で "sufficient" になる。
   security.pam.services = {
     sudo.u2f.control = "sufficient";
-    login.u2f.control = "sufficient"; # SDDMログインは "auth substack login" 経由でこれが効く
-    kde.u2f.control = "sufficient";   # KDE画面ロック/解除
+    # SDDMログインは "auth substack login" 経由でこれが効く。TTYログインも同じ。
+    # "sufficient" だと鍵で通った時点で認証が終わり、後ろの pam_kwallet5 にパスワードが渡らず、
+    # ログイン後に KDE ウォレットのパスワードを聞かれる。"required" にしてパスワードも必ず通す。
+    # 経緯は docs/ai-logs/2026-11-18-kwallet-prompt-after-yubikey.md を参照。
+    login.u2f.control = "required";
+    kde.u2f.control = "sufficient";   # KDE画面ロック/解除 (ログイン済みなのでウォレットには影響しない)
   };
 }

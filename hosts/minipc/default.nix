@@ -2,6 +2,8 @@
   imports = [
     ./hardware-configuration.nix
     ../../hosts/common/default.nix
+    # YubiKey によるログイン・sudo 認証。vbox は検証用のため読み込まない (docs/yubikey.md)
+    ../../hosts/common/yubikey.nix
     ./kde.nix
   ];
 

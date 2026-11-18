@@ -109,15 +109,7 @@ nixos-install --flake .#vbox --root /mnt
 nixos-enter --root /mnt -c 'passwd kaka'
 ```
 
-YubiKey / PAM U2F を使う場合は、再起動前にマッピングを配置する。
-VirtualBox では YubiKey を VM に USB パススルーしてから実行する:
-
-```bash
-nix-shell -p pam_u2f --run 'pamu2fcfg -u kaka -o pam://dotfiles-nixos -V > /tmp/u2f_keys'
-install -Dm600 -o root -g root /tmp/u2f_keys /mnt/etc/security/u2f_keys
-```
-
-上記は YubiKey Bio (指紋) 用。バックアップキーの追記など、詳細は [YubiKey / PAM U2F](yubikey.md) を参照。
+vbox は検証用のため YubiKey (`hosts/common/yubikey.nix`) を読み込まない。マッピングの配置は不要。
 
 パスワードを設定したら電源を切る:
 
