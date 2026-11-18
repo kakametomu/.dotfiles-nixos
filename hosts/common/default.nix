@@ -7,7 +7,6 @@
     ./desktop.nix
     ./user.nix
     ./nix.nix
-    ./yubikey.nix
     ./boot.nix
     ./packages.nix
     ./flatpak.nix
