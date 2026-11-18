@@ -25,7 +25,7 @@ mozc_server を停止し、この4ファイルをバックアップの上で削�
 
 ### 2. システム辞書(fcitx5-mozc-ut)を調査(→これが原因)
 
-このマシンでは [hosts/common/input-method.nix](../hosts/common/input-method.nix) で `fcitx5-mozc-ut` を使用している。これは nixpkgs 上で以下のように定義されている([mozc-ut/package.nix](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/mo/mozc-ut/package.nix)):
+このマシンでは [hosts/common/input-method.nix](../../hosts/common/input-method.nix) で `fcitx5-mozc-ut` を使用している。これは nixpkgs 上で以下のように定義されている([mozc-ut/package.nix](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/mo/mozc-ut/package.nix)):
 
 ```nix
 mozc.override {
@@ -99,4 +99,4 @@ Mozc の辞書ツール(`mozc_tool --mode=dictionary_tool`)でユーザー辞書
 ## 再発した場合
 
 - 同様の症状が別の読みパターンで出た場合も、同じ手順(辞書ツールでユーザー辞書に正しい変換を単語登録)で個別に対処できる
-- 根本的に解決したい場合は、上記の「恒久対応」セクションの `mozcdic-ut-neologd` 除外構成を [hosts/common/input-method.nix](../hosts/common/input-method.nix) に適用し、`sudo nixos-rebuild switch` でビルドし直す
+- 根本的に解決したい場合は、上記の「恒久対応」セクションの `mozcdic-ut-neologd` 除外構成を [hosts/common/input-method.nix](../../hosts/common/input-method.nix) に適用し、`sudo nixos-rebuild switch` でビルドし直す
